@@ -5,6 +5,7 @@ import burp.api.montoya.http.HttpService
 import burp.api.montoya.http.message.requests.HttpRequest
 import com.bbh.me262.mcp.Tool
 import com.bbh.me262.safety.RoeGuard
+import com.bbh.me262.util.Combinatorics
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -130,20 +131,13 @@ class FuzzTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
             val markers = resolveMarkers(arguments, sets.size)
             markers.forEach { require(template.contains(it)) { "template does not contain marker '$it'" } }
             val combos = if (mode == "pitchfork") {
-                val n = sets.minOf { it.size }
-                (0 until n).map { i -> sets.map { it[i] } }
+                Combinatorics.pitchfork(sets)
             } else {
-                cartesian(sets).take(max).toList()
+                Combinatorics.cartesian(sets, max)
             }
             markers to combos.take(max)
         }
         else -> error("unknown mode '$mode' (sniper|clusterbomb|pitchfork)")
-    }
-
-    private fun cartesian(sets: List<List<String>>): Sequence<List<String>> {
-        var acc: Sequence<List<String>> = sequenceOf(emptyList())
-        for (set in sets) acc = acc.flatMap { prefix -> set.asSequence().map { prefix + it } }
-        return acc
     }
 
     private fun resolveMarkers(arguments: JsonObject, count: Int): List<String> {

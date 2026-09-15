@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.bbh.me262"
-version = "0.8.0"
+version = "0.9.0"
 
 repositories {
     mavenCentral()
@@ -16,6 +16,7 @@ dependencies {
     compileOnly("net.portswigger.burp.extensions:montoya-api:2025.5")
     // Our only bundled runtime dependency: JSON for the MCP/JSON-RPC layer.
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    testImplementation(kotlin("test"))
 }
 
 kotlin {
@@ -35,3 +36,5 @@ tasks.shadowJar {
 
 // `./gradlew build` should produce the loadable fat jar.
 tasks.named("build") { dependsOn(tasks.named("shadowJar")) }
+
+tasks.test { useJUnitPlatform() }
