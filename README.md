@@ -27,7 +27,7 @@ Requires JDK 17+ (local JDK 17 is fine; Burp ships its own JRE 21).
 
 ```bash
 ./gradlew shadowJar
-# -> build/libs/burp-mcp-me262-0.9.0.jar
+# -> build/libs/burp-mcp-me262-0.10.0.jar
 ```
 
 If the Gradle wrapper jar is missing (no gradle installed yet), bootstrap once:
@@ -45,7 +45,7 @@ brew install gradle && gradle wrapper --gradle-version 8.10.2
 ## Load into Burp
 
 1. Burp Suite Pro > **Extensions** > **Installed** > **Add**.
-2. Type **Java**, select `build/libs/burp-mcp-me262-0.9.0.jar`.
+2. Type **Java**, select `build/libs/burp-mcp-me262-0.10.0.jar`.
 3. The **Output** tab shows: `Burp-MCP-Me262 ready -> http://127.0.0.1:9262/`.
 4. A **Me262** tab appears in Burp showing the endpoint and the loaded tools.
 
@@ -59,7 +59,7 @@ claude mcp add --transport sse me262 http://127.0.0.1:9262/ --scope project
 
 Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
 
-## Tools (v0.9.0)
+## Tools (v0.10.0)
 
 | tool | what it does |
 |------|--------------|

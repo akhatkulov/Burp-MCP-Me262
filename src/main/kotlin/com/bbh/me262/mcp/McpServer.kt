@@ -48,6 +48,7 @@ class McpServer(
     private val sessions = ConcurrentHashMap<String, Session>()
     private val pool = Executors.newCachedThreadPool()
     private var http: HttpServer? = null
+    private val dispatcher = Dispatcher(registry, serverName, serverVersion, protocolVersion) { logging.logToError("[Me262] " + it) }
 
     private class Session(val out: OutputStream) {
         val lock = Any()
@@ -173,62 +174,9 @@ class McpServer(
             logging.logToError("[Me262] malformed JSON-RPC: ${it.message}")
             return
         }
-        val response = dispatch(req) ?: return // notifications produce no reply
+        val response = dispatcher.dispatch(req) ?: return // notifications produce no reply
         writeEvent(session, "message", json.encodeToString(JsonRpcResponse.serializer(), response))
     }
-
-    private fun dispatch(req: JsonRpcRequest): JsonRpcResponse? = when (req.method) {
-        "initialize" -> ok(req.id, buildJsonObject {
-            put("protocolVersion", protocolVersion)
-            putJsonObject("capabilities") { putJsonObject("tools") {} }
-            putJsonObject("serverInfo") {
-                put("name", serverName)
-                put("version", serverVersion)
-            }
-        })
-        "notifications/initialized" -> null
-        "ping" -> ok(req.id, buildJsonObject {})
-        "tools/list" -> ok(req.id, buildJsonObject {
-            putJsonArray("tools") {
-                for (t in registry.list()) add(buildJsonObject {
-                    put("name", t.name)
-                    put("description", t.description)
-                    put("inputSchema", t.inputSchema)
-                })
-            }
-        })
-        "tools/call" -> handleToolCall(req)
-        else -> err(req.id, -32601, "Method not found: ${req.method}")
-    }
-
-    private fun handleToolCall(req: JsonRpcRequest): JsonRpcResponse {
-        val params = req.params as? JsonObject ?: return err(req.id, -32602, "invalid params")
-        val name = params["name"]?.jsonPrimitive?.contentOrNull
-            ?: return err(req.id, -32602, "missing tool name")
-        val args = params["arguments"] as? JsonObject ?: JsonObject(emptyMap())
-        val tool = registry.get(name) ?: return err(req.id, -32602, "unknown tool: $name")
-        return runCatching { tool.execute(args) }.fold(
-            onSuccess = { text -> toolResult(req.id, text, isError = false) },
-            onFailure = { t ->
-                logging.logToError("[Me262] tool '$name' failed: ${t.message}")
-                toolResult(req.id, "ERROR: ${t.message}", isError = true)
-            },
-        )
-    }
-
-    private fun toolResult(id: JsonElement?, text: String, isError: Boolean) = ok(id, buildJsonObject {
-        putJsonArray("content") {
-            add(buildJsonObject {
-                put("type", "text")
-                put("text", text)
-            })
-        }
-        put("isError", isError)
-    })
-
-    private fun ok(id: JsonElement?, result: JsonElement) = JsonRpcResponse(id = id, result = result)
-    private fun err(id: JsonElement?, code: Int, message: String) =
-        JsonRpcResponse(id = id, error = JsonRpcError(code, message))
 
     private fun respond(ex: HttpExchange, code: Int, body: String) {
         securityHeaders(ex)
