@@ -16,8 +16,8 @@ Legend: [x] done  [~] partial  [ ] planned
 - [x] Track Audit/Crawl handles in a scan registry (ScanRegistry) so issues map to a scan id
 
 ## v0.3 — native fuzzer (Intruder replacement) — done
-- [x] `fuzz` — sniper over Burp HTTP, payload list/wordlist, grep-match,
-      regex extract, status/length distribution, concurrency cap  [ ] cluster-bomb
+- [x] `fuzz` — sniper/clusterbomb/pitchfork over Burp HTTP, payload list/wordlist,
+      grep-match, regex extract, status/length distribution, concurrency cap
 - [ ] `send_to_intruder` / `send_to_repeater` convenience wrappers
 
 ## v0.4 — visibility & control — mostly done
