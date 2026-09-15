@@ -41,7 +41,7 @@ Legend: [x] done  [~] partial  [ ] planned
 - [x] Optional bearer token on the MCP endpoint (-Dme262.token)
 - [ ] Structured JSON tool outputs (not just text) where useful
 - [x] ROE guard on active tools (Burp scope; -Dme262.allowOutOfScope override)
-- [x] Unit tests: fuzzer combinatorics, tool registry, JSON-RPC dispatch (Dispatcher)
+- [x] Unit + integration tests: combinatorics, registry, dispatch, live SSE transport (13)
 
 ## Known API ceilings (cannot fix in MCP)
 - No cross-extension invocation / enumeration in Montoya.

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.bbh.me262"
-version = "0.10.0"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -17,6 +17,7 @@ dependencies {
     // Our only bundled runtime dependency: JSON for the MCP/JSON-RPC layer.
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     testImplementation(kotlin("test"))
+    testImplementation("net.portswigger.burp.extensions:montoya-api:2025.5")
 }
 
 kotlin {

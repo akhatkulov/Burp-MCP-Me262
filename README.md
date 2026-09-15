@@ -27,7 +27,7 @@ Requires JDK 17+ (local JDK 17 is fine; Burp ships its own JRE 21).
 
 ```bash
 ./gradlew shadowJar
-# -> build/libs/burp-mcp-me262-0.10.0.jar
+# -> build/libs/burp-mcp-me262-1.0.0.jar
 ```
 
 If the Gradle wrapper jar is missing (no gradle installed yet), bootstrap once:
@@ -39,13 +39,13 @@ brew install gradle && gradle wrapper --gradle-version 8.10.2
 ### Tests
 
 ```bash
-./gradlew test   # unit tests for the fuzzer combinatorics + tool registry
+./gradlew test   # 13 tests: combinatorics, registry, JSON-RPC dispatch, live SSE transport
 ```
 
 ## Load into Burp
 
 1. Burp Suite Pro > **Extensions** > **Installed** > **Add**.
-2. Type **Java**, select `build/libs/burp-mcp-me262-0.10.0.jar`.
+2. Type **Java**, select `build/libs/burp-mcp-me262-1.0.0.jar`.
 3. The **Output** tab shows: `Burp-MCP-Me262 ready -> http://127.0.0.1:9262/`.
 4. A **Me262** tab appears in Burp showing the endpoint and the loaded tools.
 
@@ -59,7 +59,7 @@ claude mcp add --transport sse me262 http://127.0.0.1:9262/ --scope project
 
 Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
 
-## Tools (v0.10.0)
+## Tools (v1.0.0)
 
 | tool | what it does |
 |------|--------------|
@@ -110,6 +110,6 @@ Within this workspace, obey each program's `SCOPE.md` / `RULES.md` — do not ru
 
 ## Licensing
 
-Our own code. Uses the Montoya API (`compileOnly`, PortSwigger's). We did **not**
-copy `PortSwigger/mcp-server` (GPL-3.0) source; if any GPL code is later pulled
-in, this repo must adopt GPL-3.0. License choice: TBD before any distribution.
+MIT (see [LICENSE](LICENSE)) for our original code. The Montoya API is used
+`compileOnly` (PortSwigger's, not redistributed). No code from `PortSwigger/mcp-server`
+(GPL-3.0) was used.
