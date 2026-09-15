@@ -3,6 +3,7 @@ package com.bbh.me262.tools
 import burp.api.montoya.MontoyaApi
 import burp.api.montoya.scanner.CrawlConfiguration
 import com.bbh.me262.mcp.Tool
+import com.bbh.me262.safety.RoeGuard
 import com.bbh.me262.scan.ScanRegistry
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -17,6 +18,7 @@ import kotlinx.serialization.json.putJsonObject
 class StartCrawlTool(
     private val api: MontoyaApi,
     private val scans: ScanRegistry,
+    private val roe: RoeGuard,
 ) : Tool {
     override val name = "start_crawl"
     override val description =
@@ -36,6 +38,7 @@ class StartCrawlTool(
 
     override fun execute(arguments: JsonObject): String {
         val url = arguments["url"]?.jsonPrimitive?.contentOrNull ?: error("'url' is required")
+        roe.requireInScope(url)
         val crawl = api.scanner().startCrawl(CrawlConfiguration.crawlConfiguration(url))
         val id = scans.addCrawl(crawl)
         return "Crawl started from $url -> scan id: $id\nUse scan_status(scan_id=$id)."

@@ -20,18 +20,18 @@ Legend: [x] done  [~] partial  [ ] planned
       regex extract, status/length distribution, concurrency cap  [ ] cluster-bomb
 - [ ] `send_to_intruder` / `send_to_repeater` convenience wrappers
 
-## v0.4 — visibility & control
-- [ ] `sitemap_query` (regex on api.siteMap())
-- [ ] `scope_add` / `scope_remove` / `scope_check`
-- [ ] `get_collaborator_*` (Pro) generate + poll interactions
+## v0.4 — visibility & control — mostly done
+- [x] `sitemap_query` (URL filter on api.siteMap())
+- [x] `scope_add` / `scope_check`  [ ] scope_remove
+- [x] `get_collaborator_*` (Pro) generate + poll interactions
 - [ ] `run_bcheck` (Scanner.bChecks)
 - [ ] `set_intercept` / `set_task_engine` toggles
 
 ## Hardening / ops
 - [ ] Config UI tab (toggle server, port, "allow config edits", per-tool enable)
-- [ ] Optional bearer token on the MCP endpoint
+- [x] Optional bearer token on the MCP endpoint (-Dme262.token)
 - [ ] Structured JSON tool outputs (not just text) where useful
-- [ ] Per-tool ROE guard hook (refuse out-of-scope hosts)
+- [x] ROE guard on active tools (Burp scope; -Dme262.allowOutOfScope override)
 - [ ] Unit tests for the JSON-RPC/SSE layer (transport is Burp-independent)
 
 ## Known API ceilings (cannot fix in MCP)

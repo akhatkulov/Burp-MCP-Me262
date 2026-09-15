@@ -4,6 +4,7 @@ import burp.api.montoya.MontoyaApi
 import burp.api.montoya.http.HttpService
 import burp.api.montoya.http.message.requests.HttpRequest
 import com.bbh.me262.mcp.Tool
+import com.bbh.me262.safety.RoeGuard
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit
  *
  * Sends MANY requests — only against authorised targets (obey SCOPE.md).
  */
-class FuzzTool(private val api: MontoyaApi) : Tool {
+class FuzzTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
     override val name = "fuzz"
     override val description =
         "Sniper-fuzz one insertion point. Replaces 'marker' (default FUZZ) in a raw 'template' " +
@@ -82,6 +83,7 @@ class FuzzTool(private val api: MontoyaApi) : Tool {
         val host = arguments["host"]?.jsonPrimitive?.contentOrNull ?: error("'host' is required")
         val port = arguments["port"]?.jsonPrimitive?.intOrNull ?: error("'port' is required")
         val tls = arguments["tls"]?.jsonPrimitive?.booleanOrNull ?: (port == 443)
+        roe.requireInScope("${if (tls) "https" else "http"}://$host/")
         val template = arguments["template"]?.jsonPrimitive?.contentOrNull ?: error("'template' is required")
         val marker = arguments["marker"]?.jsonPrimitive?.contentOrNull ?: "FUZZ"
         require(template.contains(marker)) { "template does not contain marker '$marker'" }

@@ -27,7 +27,7 @@ Requires JDK 17+ (local JDK 17 is fine; Burp ships its own JRE 21).
 
 ```bash
 ./gradlew shadowJar
-# -> build/libs/burp-mcp-me262-0.3.0.jar
+# -> build/libs/burp-mcp-me262-0.4.0.jar
 ```
 
 If the Gradle wrapper jar is missing (no gradle installed yet), bootstrap once:
@@ -39,7 +39,7 @@ brew install gradle && gradle wrapper --gradle-version 8.10.2
 ## Load into Burp
 
 1. Burp Suite Pro > **Extensions** > **Installed** > **Add**.
-2. Type **Java**, select `build/libs/burp-mcp-me262-0.3.0.jar`.
+2. Type **Java**, select `build/libs/burp-mcp-me262-0.4.0.jar`.
 3. The **Output** tab shows: `Burp-MCP-Me262 ready -> http://127.0.0.1:9262/`.
 
 Override host/port by launching Burp with `-Dme262.port=9262 -Dme262.host=127.0.0.1`.
@@ -52,7 +52,7 @@ claude mcp add --transport sse me262 http://127.0.0.1:9262/ --scope project
 
 Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
 
-## Tools (v0.3.0)
+## Tools (v0.4.0)
 
 | tool | what it does |
 |------|--------------|
@@ -64,9 +64,22 @@ Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
 | `get_scanner_issues` | list audit issues (per scan or whole site map) — **Pro** |
 | `generate_report` | write an HTML/XML Scanner report to a file — **Pro** |
 | `fuzz` | sniper-fuzz one insertion point through Burp (Intruder replacement) |
+| `scope_check` | is a URL in Burp's Target scope? |
+| `scope_add` | add a URL/prefix to Burp's Target scope |
+| `sitemap_query` | list site map entries, URL-filtered |
+| `generate_collaborator_payload` | mint an OOB Collaborator payload — **Pro** |
+| `get_collaborator_interactions` | poll Collaborator DNS/HTTP/SMTP hits — **Pro** |
 
 See [ROADMAP.md](ROADMAP.md) for what's next and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 for how it fits together.
+
+## Security
+
+- Binds to `127.0.0.1` only; rejects non-loopback `Origin` (DNS-rebinding defence).
+- Optional bearer token: start Burp with `-Dme262.token=SECRET`, then
+  `claude mcp add --transport sse me262 http://127.0.0.1:9262/ --header "Authorization: Bearer SECRET"`.
+- **ROE guard:** `fuzz`, `start_active_scan` and `start_crawl` refuse targets
+  not in Burp's Target scope. Override for lab work with `-Dme262.allowOutOfScope=true`.
 
 ## Rules of engagement
 

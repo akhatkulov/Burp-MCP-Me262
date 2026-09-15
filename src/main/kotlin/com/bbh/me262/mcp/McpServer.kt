@@ -38,6 +38,7 @@ class McpServer(
     private val serverName: String = "burp-mcp-me262",
     private val serverVersion: String = "0.1.0",
     private val protocolVersion: String = "2024-11-05",
+    private val authToken: String? = null,
 ) {
     private val json = Json {
         ignoreUnknownKeys = true
@@ -77,6 +78,10 @@ class McpServer(
                 respond(ex, 403, "forbidden origin")
                 return
             }
+            if (authToken != null && !isAuthorized(ex)) {
+                respond(ex, 401, "unauthorized")
+                return
+            }
             when (ex.requestMethod.uppercase()) {
                 "GET" -> handleSse(ex)
                 "POST" -> handlePost(ex)
@@ -87,6 +92,9 @@ class McpServer(
             runCatching { respond(ex, 500, "internal error") }
         }
     }
+
+    private fun isAuthorized(ex: HttpExchange): Boolean =
+        ex.requestHeaders.getFirst("Authorization") == "Bearer $authToken"
 
     private fun isLocalOrigin(origin: String): Boolean =
         origin.startsWith("http://127.0.0.1") ||

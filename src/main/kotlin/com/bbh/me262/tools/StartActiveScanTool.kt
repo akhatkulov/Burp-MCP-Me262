@@ -5,6 +5,7 @@ import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.scanner.AuditConfiguration
 import burp.api.montoya.scanner.BuiltInAuditConfiguration
 import com.bbh.me262.mcp.Tool
+import com.bbh.me262.safety.RoeGuard
 import com.bbh.me262.scan.ScanRegistry
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -22,6 +23,7 @@ import kotlinx.serialization.json.putJsonObject
 class StartActiveScanTool(
     private val api: MontoyaApi,
     private val scans: ScanRegistry,
+    private val roe: RoeGuard,
 ) : Tool {
     override val name = "start_active_scan"
     override val description =
@@ -41,6 +43,7 @@ class StartActiveScanTool(
 
     override fun execute(arguments: JsonObject): String {
         val url = arguments["url"]?.jsonPrimitive?.contentOrNull ?: error("'url' is required")
+        roe.requireInScope(url)
         val config = AuditConfiguration.auditConfiguration(
             BuiltInAuditConfiguration.LEGACY_ACTIVE_AUDIT_CHECKS,
         )

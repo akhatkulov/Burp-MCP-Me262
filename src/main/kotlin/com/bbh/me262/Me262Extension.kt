@@ -2,15 +2,22 @@ package com.bbh.me262
 
 import burp.api.montoya.BurpExtension
 import burp.api.montoya.MontoyaApi
+import com.bbh.me262.collab.CollaboratorHolder
 import com.bbh.me262.mcp.McpServer
 import com.bbh.me262.mcp.ToolRegistry
+import com.bbh.me262.safety.RoeGuard
 import com.bbh.me262.scan.ScanRegistry
-import com.bbh.me262.tools.GenerateReportTool
+import com.bbh.me262.tools.CollaboratorInteractionsTool
+import com.bbh.me262.tools.CollaboratorPayloadTool
 import com.bbh.me262.tools.FuzzTool
+import com.bbh.me262.tools.GenerateReportTool
 import com.bbh.me262.tools.GetProxyHistoryTool
 import com.bbh.me262.tools.GetScannerIssuesTool
 import com.bbh.me262.tools.ScanStatusTool
+import com.bbh.me262.tools.ScopeAddTool
+import com.bbh.me262.tools.ScopeCheckTool
 import com.bbh.me262.tools.SendHttpRequestTool
+import com.bbh.me262.tools.SitemapQueryTool
 import com.bbh.me262.tools.StartActiveScanTool
 import com.bbh.me262.tools.StartCrawlTool
 
@@ -18,7 +25,10 @@ import com.bbh.me262.tools.StartCrawlTool
  * Burp-MCP-Me262 — our own Montoya-based MCP server for Burp Suite Pro.
  *
  * Discovered by Burp via META-INF/services/burp.api.montoya.BurpExtension.
- * Host/port overridable with -Dme262.host / -Dme262.port.
+ * System properties:
+ *   -Dme262.host / -Dme262.port      bind address (default 127.0.0.1:9262)
+ *   -Dme262.token                    require Authorization: Bearer <token>
+ *   -Dme262.allowOutOfScope=true     disable the ROE scope guard (lab only)
  */
 class Me262Extension : BurpExtension {
 
@@ -27,26 +37,36 @@ class Me262Extension : BurpExtension {
     override fun initialize(api: MontoyaApi) {
         api.extension().setName("Burp-MCP-Me262")
         val log = api.logging()
-        log.logToOutput("Burp-MCP-Me262 v0.3.0 loading...")
+        log.logToOutput("Burp-MCP-Me262 v0.4.0 loading...")
 
         val host = System.getProperty("me262.host") ?: "127.0.0.1"
         val port = (System.getProperty("me262.port") ?: "9262").toIntOrNull() ?: 9262
+        val token = System.getProperty("me262.token")?.takeIf { it.isNotBlank() }
 
         val scans = ScanRegistry()
+        val roe = RoeGuard(api)
+        val collab = CollaboratorHolder(api, log)
+
         val registry = ToolRegistry()
             // v0.1 core
             .register(SendHttpRequestTool(api))
             .register(GetProxyHistoryTool(api))
-            // v0.3 native fuzzer
-            .register(FuzzTool(api))
-            // v0.2 scanner loop
-            .register(StartActiveScanTool(api, scans))
-            .register(StartCrawlTool(api, scans))
+            // v0.3 native fuzzer (ROE-guarded)
+            .register(FuzzTool(api, roe))
+            // v0.2 scanner loop (active ones ROE-guarded)
+            .register(StartActiveScanTool(api, scans, roe))
+            .register(StartCrawlTool(api, scans, roe))
             .register(ScanStatusTool(scans))
             .register(GetScannerIssuesTool(api, scans))
             .register(GenerateReportTool(api, scans))
+            // v0.4 visibility & control
+            .register(ScopeCheckTool(api))
+            .register(ScopeAddTool(api))
+            .register(SitemapQueryTool(api))
+            .register(CollaboratorPayloadTool(collab))
+            .register(CollaboratorInteractionsTool(collab))
 
-        val mcp = McpServer(host, port, registry, log, serverVersion = "0.3.0")
+        val mcp = McpServer(host, port, registry, log, serverVersion = "0.4.0", authToken = token)
         mcp.start()
         server = mcp
 
@@ -55,6 +75,7 @@ class Me262Extension : BurpExtension {
             server?.stop()
         }
 
-        log.logToOutput("Burp-MCP-Me262 ready -> http://$host:$port/  (${registry.size()} tools)")
+        val auth = if (token != null) "token-protected" else "no-auth (loopback)"
+        log.logToOutput("Burp-MCP-Me262 ready -> http://$host:$port/  (${registry.size()} tools, $auth)")
     }
 }
