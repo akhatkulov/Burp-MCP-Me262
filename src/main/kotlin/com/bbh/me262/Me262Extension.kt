@@ -7,16 +7,20 @@ import com.bbh.me262.mcp.McpServer
 import com.bbh.me262.mcp.ToolRegistry
 import com.bbh.me262.safety.RoeGuard
 import com.bbh.me262.scan.ScanRegistry
+import com.bbh.me262.ui.Me262Tab
 import com.bbh.me262.tools.CollaboratorInteractionsTool
 import com.bbh.me262.tools.CollaboratorPayloadTool
 import com.bbh.me262.tools.FuzzTool
 import com.bbh.me262.tools.GenerateReportTool
 import com.bbh.me262.tools.GetProxyHistoryTool
 import com.bbh.me262.tools.GetScannerIssuesTool
+import com.bbh.me262.tools.ImportBCheckTool
 import com.bbh.me262.tools.ScanStatusTool
 import com.bbh.me262.tools.ScopeAddTool
 import com.bbh.me262.tools.ScopeCheckTool
+import com.bbh.me262.tools.ScopeRemoveTool
 import com.bbh.me262.tools.SendHttpRequestTool
+import com.bbh.me262.tools.SetInterceptTool
 import com.bbh.me262.tools.SitemapQueryTool
 import com.bbh.me262.tools.StartActiveScanTool
 import com.bbh.me262.tools.StartCrawlTool
@@ -37,11 +41,12 @@ class Me262Extension : BurpExtension {
     override fun initialize(api: MontoyaApi) {
         api.extension().setName("Burp-MCP-Me262")
         val log = api.logging()
-        log.logToOutput("Burp-MCP-Me262 v0.4.0 loading...")
+        log.logToOutput("Burp-MCP-Me262 v0.5.0 loading...")
 
         val host = System.getProperty("me262.host") ?: "127.0.0.1"
         val port = (System.getProperty("me262.port") ?: "9262").toIntOrNull() ?: 9262
         val token = System.getProperty("me262.token")?.takeIf { it.isNotBlank() }
+        val allowOutOfScope = System.getProperty("me262.allowOutOfScope")?.toBoolean() ?: false
 
         val scans = ScanRegistry()
         val roe = RoeGuard(api)
@@ -65,17 +70,26 @@ class Me262Extension : BurpExtension {
             .register(SitemapQueryTool(api))
             .register(CollaboratorPayloadTool(collab))
             .register(CollaboratorInteractionsTool(collab))
+            // v0.5 control + bchecks
+            .register(ScopeRemoveTool(api))
+            .register(SetInterceptTool(api))
+            .register(ImportBCheckTool(api))
 
-        val mcp = McpServer(host, port, registry, log, serverVersion = "0.4.0", authToken = token)
+        val mcp = McpServer(host, port, registry, log, serverVersion = "0.5.0", authToken = token)
         mcp.start()
         server = mcp
+
+        val url = "http://$host:$port/"
+        val auth = if (token != null) "token-protected" else "no-auth (loopback)"
+        runCatching {
+            api.userInterface().registerSuiteTab("Me262", Me262Tab.build(url, auth, allowOutOfScope, registry))
+        }.onFailure { log.logToError("[Me262] suite tab unavailable: ${it.message}") }
 
         api.extension().registerUnloadingHandler {
             log.logToOutput("Burp-MCP-Me262 unloading...")
             server?.stop()
         }
 
-        val auth = if (token != null) "token-protected" else "no-auth (loopback)"
-        log.logToOutput("Burp-MCP-Me262 ready -> http://$host:$port/  (${registry.size()} tools, $auth)")
+        log.logToOutput("Burp-MCP-Me262 ready -> $url  (${registry.size()} tools, $auth)")
     }
 }

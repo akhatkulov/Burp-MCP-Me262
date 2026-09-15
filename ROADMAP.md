@@ -22,13 +22,13 @@ Legend: [x] done  [~] partial  [ ] planned
 
 ## v0.4 — visibility & control — mostly done
 - [x] `sitemap_query` (URL filter on api.siteMap())
-- [x] `scope_add` / `scope_check`  [ ] scope_remove
+- [x] `scope_add` / `scope_check` / `scope_remove`
 - [x] `get_collaborator_*` (Pro) generate + poll interactions
-- [ ] `run_bcheck` (Scanner.bChecks)
-- [ ] `set_intercept` / `set_task_engine` toggles
+- [x] `import_bcheck` (Scanner.bChecks) — runs in subsequent audits
+- [x] `set_intercept`  (set_task_engine: no Montoya API in 2025.5)
 
 ## Hardening / ops
-- [ ] Config UI tab (toggle server, port, "allow config edits", per-tool enable)
+- [x] Suite status tab (endpoint + tool list)  [ ] interactive toggles
 - [x] Optional bearer token on the MCP endpoint (-Dme262.token)
 - [ ] Structured JSON tool outputs (not just text) where useful
 - [x] ROE guard on active tools (Burp scope; -Dme262.allowOutOfScope override)
@@ -37,4 +37,5 @@ Legend: [x] done  [~] partial  [ ] planned
 ## Known API ceilings (cannot fix in MCP)
 - No cross-extension invocation / enumeration in Montoya.
 - No programmatic "run Intruder UI attack + collect results" — we build our own.
+- No `crawlAndAudit` / task-engine state in Montoya 2025.5 — omitted.
 - Macros / session-handling rule *execution* are not directly drivable.
