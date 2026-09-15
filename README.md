@@ -90,7 +90,7 @@ Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
 | `get_websocket_history` | read Proxy WebSocket messages |
 | `send_to_comparer` | diff two strings in Burp Comparer |
 
-See [ROADMAP.md](ROADMAP.md) for what's next and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+See [docs/EXTENSION-COMPAT.md](docs/EXTENSION-COMPAT.md) for which Burp extensions Me262 can drive, [ROADMAP.md](ROADMAP.md) for what's next and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 for how it fits together.
 
 ## Security
