@@ -51,7 +51,12 @@ brew install gradle && gradle wrapper --gradle-version 8.10.2
 
 Override host/port by launching Burp with `-Dme262.port=9262 -Dme262.host=127.0.0.1`.
 
-## Connect Claude Code
+## Connect a client
+
+See [docs/CONNECTING.md](docs/CONNECTING.md) for Claude Code, Cursor, Cline, Windsurf,
+OpenCode, Claude Desktop, and the `mcp-remote` bridge.
+
+### Claude Code
 
 ```bash
 claude mcp add --transport sse me262 http://127.0.0.1:9262/ --scope project
