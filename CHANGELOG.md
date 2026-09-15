@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2
+- Fix: Me262 status tab showed raw <html> markup. Burp's Look-and-Feel disables
+  HTML in Swing components, so the JLabel rendered literally. Rebuilt the tab as
+  a plain monospaced JTextArea.
+
 ## 1.0.1
 - Fix: rewrite the SSE transport on a raw java.net.ServerSocket. Burp's trimmed
   (jlink) JRE has no com.sun.net.httpserver, which threw ClassNotFoundException
