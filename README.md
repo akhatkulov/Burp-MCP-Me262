@@ -1,120 +1,116 @@
 # Burp-MCP-Me262
 
-Our own Model Context Protocol (MCP) server for **Burp Suite Pro**, built as a
-native **Montoya API** extension in Kotlin. Unlike a thin wrapper around the
-stock MCP, this runs *inside* Burp's JVM, so it can reach the full Montoya
-surface — including the Pro Scanner engine that the official MCP leaves out.
+> Drive **Burp Suite Pro** from any AI agent over MCP — launch active scans, run a
+> native fuzzer, mint Collaborator payloads, and generate reports, all guarded by
+> Burp's own Target scope.
 
-> Codename **Me262** — first of its kind, built for speed. Loopback-only.
+[![CI](https://github.com/akhatkulov/Burp-MCP-Me262/actions/workflows/ci.yml/badge.svg)](https://github.com/akhatkulov/Burp-MCP-Me262/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/akhatkulov/Burp-MCP-Me262)](https://github.com/akhatkulov/Burp-MCP-Me262/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](build.gradle.kts)
+[![Stars](https://img.shields.io/github/stars/akhatkulov/Burp-MCP-Me262?style=social)](https://github.com/akhatkulov/Burp-MCP-Me262/stargazers)
 
-## Why this exists
+Me262 is a native **Montoya-API** extension that runs an **MCP server inside Burp
+Suite Pro**, exposing **26 tools** to Claude Code, Cursor, Cline, Windsurf,
+OpenCode, Claude Desktop, and any MCP client. It runs its own SSE transport on a
+raw socket (no `com.sun.net.httpserver`, so it loads in Burp's trimmed JRE) and
+needs no third-party runtime beyond one JSON library.
 
-The official `PortSwigger/mcp-server` exposes ~27 tools but deliberately omits
-the heavy Pro machinery (no active-scan launch, no report generation, no
-BChecks, no native fuzzer). Because Montoya *does* expose those
-(`Scanner.startAudit`, `startCrawl`, `generateReport`, `bChecks`), we fork the
-idea, not the code, and add them ourselves.
+## Why Me262
 
-**Honest ceiling:** Montoya is the limit. There is no API to enumerate or call
-other extensions directly. Installed extensions are leveraged *indirectly* — any
-extension that registers scan checks / BChecks / proxy / HTTP / session-handling
-/ Intruder-payload hooks runs automatically when we push traffic or start a scan
-through Me262. UI-only extension buttons stay manual.
+The stock Burp MCP can send requests and read history — but it stops there. Me262
+unlocks the Pro engine and adds the discipline you actually need on a live target.
 
-## Build
+| Capability | Stock Burp MCP | **Me262** |
+|---|:---:|:---:|
+| Send HTTP/1.1 & /2, read Proxy history | ✅ | ✅ |
+| Collaborator payloads + interactions | ✅ | ✅ |
+| **Launch active scan / crawl** | ❌ | ✅ |
+| **Read scanner issues + generate report** | ❌ | ✅ |
+| **Native fuzzer** (sniper/clusterbomb/pitchfork) | ❌ | ✅ |
+| **BCheck import**, task-engine, intercept control | ❌ | ✅ |
+| Scope / site map / send-to (Repeater/Intruder/Comparer) | partial | ✅ |
+| **ROE guard** — refuses out-of-scope targets | ❌ | ✅ |
+| Bearer-token auth on the endpoint | ❌ | ✅ |
+| Unit + live-transport tests | ❌ | ✅ 13 |
 
-Requires JDK 17+ (local JDK 17 is fine; Burp ships its own JRE 21).
+## Quickstart
 
-```bash
-./gradlew shadowJar
-# -> build/libs/burp-mcp-me262-1.0.2.jar
-```
-
-If the Gradle wrapper jar is missing (no gradle installed yet), bootstrap once:
-
-```bash
-brew install gradle && gradle wrapper --gradle-version 8.10.2
-```
-
-### Tests
-
-```bash
-./gradlew test   # 13 tests: combinatorics, registry, JSON-RPC dispatch, live SSE transport
-```
-
-## Load into Burp
-
-1. Burp Suite Pro > **Extensions** > **Installed** > **Add**.
-2. Type **Java**, select `build/libs/burp-mcp-me262-1.0.2.jar`.
-3. The **Output** tab shows: `Burp-MCP-Me262 ready -> http://127.0.0.1:9262/`.
-4. A **Me262** tab appears in Burp showing the endpoint and the loaded tools.
-
-Override host/port by launching Burp with `-Dme262.port=9262 -Dme262.host=127.0.0.1`.
-
-## Connect a client
-
-See [docs/CONNECTING.md](docs/CONNECTING.md) for Claude Code, Cursor, Cline, Windsurf,
-OpenCode, Claude Desktop, and the `mcp-remote` bridge.
-
-### Claude Code
+Requires JDK 17+ (Burp ships its own JRE 21).
 
 ```bash
-claude mcp add --transport sse me262 http://127.0.0.1:9262/ --scope project
+git clone https://github.com/akhatkulov/Burp-MCP-Me262
+cd Burp-MCP-Me262
+./gradlew shadowJar          # -> build/libs/burp-mcp-me262-<version>.jar
 ```
 
-Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
+1. **Load in Burp**: Extensions > Installed > Add > type **Java** > pick the jar.
+   The Output tab prints `ready -> http://127.0.0.1:9262/ (26 tools)`, and a
+   **Me262** tab appears.
+2. **Connect Claude Code**:
+   ```bash
+   claude mcp add --transport sse me262 http://127.0.0.1:9262/
+   ```
+   Approve it (`/mcp`), then the `mcp__me262__*` tools are live.
 
-## Tools (v1.0.0)
+Other clients (Cursor, Cline, Windsurf, OpenCode, Claude Desktop, `mcp-remote`):
+see **[docs/CONNECTING.md](docs/CONNECTING.md)**.
 
-| tool | what it does |
-|------|--------------|
-| `send_http_request` | send a URL or raw request through Burp's HTTP stack |
-| `get_proxy_history` | read recent Proxy history, with substring filter |
-| `start_active_scan` | launch a Pro active audit; returns a scan id — **Pro** |
-| `start_crawl` | crawl from a seed URL; returns a scan id — **Pro** |
-| `scan_status` | progress of scans started via Me262 |
-| `get_scanner_issues` | list audit issues (per scan or whole site map) — **Pro** |
-| `generate_report` | write an HTML/XML Scanner report to a file — **Pro** |
-| `fuzz` | sniper/clusterbomb/pitchfork fuzzing through Burp (Intruder replacement) |
-| `scope_check` | is a URL in Burp's Target scope? |
-| `scope_add` | add a URL/prefix to Burp's Target scope |
-| `sitemap_query` | list site map entries, URL-filtered |
-| `generate_collaborator_payload` | mint an OOB Collaborator payload — **Pro** |
-| `get_collaborator_interactions` | poll Collaborator DNS/HTTP/SMTP hits — **Pro** |
-| `scope_remove` | remove a URL/prefix from Burp's Target scope |
-| `set_intercept` | turn Burp Proxy intercept on/off |
-| `import_bcheck` | import a BCheck so it runs in active scans — **Pro** |
-| `send_to_repeater` | hand a request to Repeater |
-| `send_to_intruder` | place a request in Intruder |
-| `send_to_organizer` | store a request in Organizer |
-| `transform` | url/base64/html encode & decode |
-| `random_string` | random alphanumeric string |
-| `set_task_engine` | pause/resume Burp's task engine |
-| `export_burp_config` | export project/user options as JSON |
-| `import_burp_config` | import options — gated by `-Dme262.allowConfigEdits` |
-| `get_websocket_history` | read Proxy WebSocket messages |
-| `send_to_comparer` | diff two strings in Burp Comparer |
+## Tools (26)
 
-See [docs/EXTENSION-COMPAT.md](docs/EXTENSION-COMPAT.md) for which Burp extensions Me262 can drive, [ROADMAP.md](ROADMAP.md) for what's next and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-for how it fits together.
+| group | tools |
+|---|---|
+| HTTP | `send_http_request`, `get_proxy_history`, `get_websocket_history` |
+| Scanner (Pro) | `start_active_scan`, `start_crawl`, `scan_status`, `get_scanner_issues`, `generate_report` |
+| Fuzzer | `fuzz` (sniper / clusterbomb / pitchfork) |
+| Send-to | `send_to_repeater`, `send_to_intruder`, `send_to_organizer`, `send_to_comparer` |
+| Scope / map | `scope_check`, `scope_add`, `scope_remove`, `sitemap_query` |
+| Collaborator (Pro) | `generate_collaborator_payload`, `get_collaborator_interactions` |
+| Control | `import_bcheck`, `set_intercept`, `set_task_engine` |
+| Utilities | `transform` (url/base64/html), `random_string` |
+| Config | `export_burp_config`, `import_burp_config` (gated) |
 
-## Security
+## Safety
 
 - Binds to `127.0.0.1` only; rejects non-loopback `Origin` (DNS-rebinding defence).
-- Optional bearer token: start Burp with `-Dme262.token=SECRET`, then
-  `claude mcp add --transport sse me262 http://127.0.0.1:9262/ --header "Authorization: Bearer SECRET"`.
-- **Config edits:** `import_burp_config` is disabled unless Burp is started with `-Dme262.allowConfigEdits=true`.
-- **ROE guard:** `fuzz`, `start_active_scan` and `start_crawl` refuse targets
-  not in Burp's Target scope. Override for lab work with `-Dme262.allowOutOfScope=true`.
+- **ROE guard**: `fuzz`, `start_active_scan`, `start_crawl` refuse targets not in
+  Burp's Target scope. Override for lab work with `-Dme262.allowOutOfScope=true`.
+- Optional token: start Burp with `-Dme262.token=SECRET`.
+- `import_burp_config` is disabled unless `-Dme262.allowConfigEdits=true`.
+- This is a testing tool — only point it at systems you are authorised to test.
 
-## Rules of engagement
+## How it works
 
-This is a testing tool. Only point it at assets you are authorised to test.
-Within this workspace, obey each program's `SCOPE.md` / `RULES.md` — do not run
-`start_active_scan` against a target whose scope is still `GATED`.
+```
+MCP client ──SSE/JSON-RPC──> Me262Extension (in Burp's JVM) ──> Montoya API ──> Burp Pro engine + extensions
+```
 
-## Licensing
+Any installed extension that hooks Burp's pipelines (scan checks like Active
+Scan++, global HTTP handlers, BChecks) participates automatically when Me262
+starts a scan or sends traffic. See **[docs/EXTENSION-COMPAT.md](docs/EXTENSION-COMPAT.md)**.
 
-MIT (see [LICENSE](LICENSE)) for our original code. The Montoya API is used
-`compileOnly` (PortSwigger's, not redistributed). No code from `PortSwigger/mcp-server`
+## Docs
+
+- [Connecting from any MCP client](docs/CONNECTING.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Which Burp extensions Me262 can drive](docs/EXTENSION-COMPAT.md)
+- [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
+
+## Build & test
+
+```bash
+./gradlew test        # 13 tests: combinatorics, registry, JSON-RPC dispatch, live SSE transport
+./gradlew shadowJar   # the loadable fat jar
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE). Uses the Burp Montoya API `compileOnly`
+(PortSwigger's, not redistributed). No code from `PortSwigger/mcp-server`
 (GPL-3.0) was used.
+
+## Contributing
+
+Issues and PRs welcome — new tools are one Kotlin file plus one `register(...)`
+line (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)). If Me262 saves you time
+on an engagement, a ⭐ helps others find it.

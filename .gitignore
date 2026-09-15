@@ -4,3 +4,6 @@ build/
 .idea/
 .DS_Store
 local.properties
+
+# engagement-specific, not for publication
+redteam/

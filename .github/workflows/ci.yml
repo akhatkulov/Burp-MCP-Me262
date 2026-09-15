@@ -1,0 +1,20 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build & test
+        run: ./gradlew test shadowJar --no-daemon --console=plain
+      - uses: actions/upload-artifact@v4
+        with:
+          name: burp-mcp-me262-jar
+          path: build/libs/*.jar
