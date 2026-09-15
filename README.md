@@ -1,0 +1,76 @@
+# Burp-MCP-Me262
+
+Our own Model Context Protocol (MCP) server for **Burp Suite Pro**, built as a
+native **Montoya API** extension in Kotlin. Unlike a thin wrapper around the
+stock MCP, this runs *inside* Burp's JVM, so it can reach the full Montoya
+surface — including the Pro Scanner engine that the official MCP leaves out.
+
+> Codename **Me262** — first of its kind, built for speed. Loopback-only.
+
+## Why this exists
+
+The official `PortSwigger/mcp-server` exposes ~27 tools but deliberately omits
+the heavy Pro machinery (no active-scan launch, no report generation, no
+BChecks, no native fuzzer). Because Montoya *does* expose those
+(`Scanner.startAudit`, `startCrawl`, `generateReport`, `bChecks`), we fork the
+idea, not the code, and add them ourselves.
+
+**Honest ceiling:** Montoya is the limit. There is no API to enumerate or call
+other extensions directly. Installed extensions are leveraged *indirectly* — any
+extension that registers scan checks / BChecks / proxy / HTTP / session-handling
+/ Intruder-payload hooks runs automatically when we push traffic or start a scan
+through Me262. UI-only extension buttons stay manual.
+
+## Build
+
+Requires JDK 17+ (local JDK 17 is fine; Burp ships its own JRE 21).
+
+```bash
+./gradlew shadowJar
+# -> build/libs/burp-mcp-me262-0.1.0.jar
+```
+
+If the Gradle wrapper jar is missing (no gradle installed yet), bootstrap once:
+
+```bash
+brew install gradle && gradle wrapper --gradle-version 8.10.2
+```
+
+## Load into Burp
+
+1. Burp Suite Pro > **Extensions** > **Installed** > **Add**.
+2. Type **Java**, select `build/libs/burp-mcp-me262-0.1.0.jar`.
+3. The **Output** tab shows: `Burp-MCP-Me262 ready -> http://127.0.0.1:9262/`.
+
+Override host/port by launching Burp with `-Dme262.port=9262 -Dme262.host=127.0.0.1`.
+
+## Connect Claude Code
+
+```bash
+claude mcp add --transport sse me262 http://127.0.0.1:9262/ --scope project
+```
+
+Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
+
+## Tools (v0.1.0)
+
+| tool | what it does |
+|------|--------------|
+| `send_http_request` | send a URL or raw request through Burp's HTTP stack |
+| `get_proxy_history` | read recent Proxy history, with substring filter |
+| `start_active_scan` | launch a Pro active audit (Scanner) — **Pro only** |
+
+See [ROADMAP.md](ROADMAP.md) for what's next and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+for how it fits together.
+
+## Rules of engagement
+
+This is a testing tool. Only point it at assets you are authorised to test.
+Within this workspace, obey each program's `SCOPE.md` / `RULES.md` — do not run
+`start_active_scan` against a target whose scope is still `GATED`.
+
+## Licensing
+
+Our own code. Uses the Montoya API (`compileOnly`, PortSwigger's). We did **not**
+copy `PortSwigger/mcp-server` (GPL-3.0) source; if any GPL code is later pulled
+in, this repo must adopt GPL-3.0. License choice: TBD before any distribution.
