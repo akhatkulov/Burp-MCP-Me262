@@ -27,7 +27,7 @@ Requires JDK 17+ (local JDK 17 is fine; Burp ships its own JRE 21).
 
 ```bash
 ./gradlew shadowJar
-# -> build/libs/burp-mcp-me262-0.6.0.jar
+# -> build/libs/burp-mcp-me262-0.7.0.jar
 ```
 
 If the Gradle wrapper jar is missing (no gradle installed yet), bootstrap once:
@@ -39,7 +39,7 @@ brew install gradle && gradle wrapper --gradle-version 8.10.2
 ## Load into Burp
 
 1. Burp Suite Pro > **Extensions** > **Installed** > **Add**.
-2. Type **Java**, select `build/libs/burp-mcp-me262-0.6.0.jar`.
+2. Type **Java**, select `build/libs/burp-mcp-me262-0.7.0.jar`.
 3. The **Output** tab shows: `Burp-MCP-Me262 ready -> http://127.0.0.1:9262/`.
 4. A **Me262** tab appears in Burp showing the endpoint and the loaded tools.
 
@@ -53,7 +53,7 @@ claude mcp add --transport sse me262 http://127.0.0.1:9262/ --scope project
 
 Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
 
-## Tools (v0.6.0)
+## Tools (v0.7.0)
 
 | tool | what it does |
 |------|--------------|
@@ -81,6 +81,8 @@ Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
 | `set_task_engine` | pause/resume Burp's task engine |
 | `export_burp_config` | export project/user options as JSON |
 | `import_burp_config` | import options — gated by `-Dme262.allowConfigEdits` |
+| `get_websocket_history` | read Proxy WebSocket messages |
+| `send_to_comparer` | diff two strings in Burp Comparer |
 
 See [ROADMAP.md](ROADMAP.md) for what's next and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 for how it fits together.

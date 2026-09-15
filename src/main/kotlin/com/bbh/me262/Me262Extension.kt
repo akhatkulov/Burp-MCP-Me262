@@ -11,6 +11,8 @@ import com.bbh.me262.ui.Me262Tab
 import com.bbh.me262.tools.CollaboratorInteractionsTool
 import com.bbh.me262.tools.CollaboratorPayloadTool
 import com.bbh.me262.tools.FuzzTool
+import com.bbh.me262.tools.GetWebsocketHistoryTool
+import com.bbh.me262.tools.SendToComparerTool
 import com.bbh.me262.tools.ExportBurpConfigTool
 import com.bbh.me262.tools.ImportBurpConfigTool
 import com.bbh.me262.tools.RandomStringTool
@@ -49,7 +51,7 @@ class Me262Extension : BurpExtension {
     override fun initialize(api: MontoyaApi) {
         api.extension().setName("Burp-MCP-Me262")
         val log = api.logging()
-        log.logToOutput("Burp-MCP-Me262 v0.6.0 loading...")
+        log.logToOutput("Burp-MCP-Me262 v0.7.0 loading...")
 
         val host = System.getProperty("me262.host") ?: "127.0.0.1"
         val port = (System.getProperty("me262.port") ?: "9262").toIntOrNull() ?: 9262
@@ -91,8 +93,11 @@ class Me262Extension : BurpExtension {
             .register(SetTaskEngineTool(api))
             .register(ExportBurpConfigTool(api))
             .register(ImportBurpConfigTool(api))
+            // v0.7 niche
+            .register(GetWebsocketHistoryTool(api))
+            .register(SendToComparerTool(api))
 
-        val mcp = McpServer(host, port, registry, log, serverVersion = "0.6.0", authToken = token)
+        val mcp = McpServer(host, port, registry, log, serverVersion = "0.7.0", authToken = token)
         mcp.start()
         server = mcp
 

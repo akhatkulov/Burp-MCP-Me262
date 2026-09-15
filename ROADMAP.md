@@ -32,6 +32,10 @@ Legend: [x] done  [~] partial  [ ] planned
 - [x] `transform` (url/base64/html encode+decode), `random_string`
 - [x] `export_burp_config` / `import_burp_config` (gated by -Dme262.allowConfigEdits)
 
+## v0.7 — niche read/compare (done)
+- [x] `get_websocket_history` (Proxy WebSocket messages)
+- [x] `send_to_comparer`
+
 ## Hardening / ops
 - [x] Suite status tab (endpoint + tool list)  [ ] interactive toggles
 - [x] Optional bearer token on the MCP endpoint (-Dme262.token)
