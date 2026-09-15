@@ -15,9 +15,9 @@ Legend: [x] done  [~] partial  [ ] planned
 - [x] `generate_report` — HTML/XML via Scanner.generateReport
 - [x] Track Audit/Crawl handles in a scan registry (ScanRegistry) so issues map to a scan id
 
-## v0.3 — native fuzzer (Intruder replacement)
-- [ ] `fuzz` — sniper/cluster-bomb over `api.http().sendRequests()`, with
-      payload lists, grep-match/extract, length/status diffing, concurrency cap
+## v0.3 — native fuzzer (Intruder replacement) — done
+- [x] `fuzz` — sniper over Burp HTTP, payload list/wordlist, grep-match,
+      regex extract, status/length distribution, concurrency cap  [ ] cluster-bomb
 - [ ] `send_to_intruder` / `send_to_repeater` convenience wrappers
 
 ## v0.4 — visibility & control
