@@ -11,6 +11,14 @@ import com.bbh.me262.ui.Me262Tab
 import com.bbh.me262.tools.CollaboratorInteractionsTool
 import com.bbh.me262.tools.CollaboratorPayloadTool
 import com.bbh.me262.tools.FuzzTool
+import com.bbh.me262.tools.ExportBurpConfigTool
+import com.bbh.me262.tools.ImportBurpConfigTool
+import com.bbh.me262.tools.RandomStringTool
+import com.bbh.me262.tools.SendToIntruderTool
+import com.bbh.me262.tools.SendToOrganizerTool
+import com.bbh.me262.tools.SendToRepeaterTool
+import com.bbh.me262.tools.SetTaskEngineTool
+import com.bbh.me262.tools.TransformTool
 import com.bbh.me262.tools.GenerateReportTool
 import com.bbh.me262.tools.GetProxyHistoryTool
 import com.bbh.me262.tools.GetScannerIssuesTool
@@ -41,7 +49,7 @@ class Me262Extension : BurpExtension {
     override fun initialize(api: MontoyaApi) {
         api.extension().setName("Burp-MCP-Me262")
         val log = api.logging()
-        log.logToOutput("Burp-MCP-Me262 v0.5.0 loading...")
+        log.logToOutput("Burp-MCP-Me262 v0.6.0 loading...")
 
         val host = System.getProperty("me262.host") ?: "127.0.0.1"
         val port = (System.getProperty("me262.port") ?: "9262").toIntOrNull() ?: 9262
@@ -74,8 +82,17 @@ class Me262Extension : BurpExtension {
             .register(ScopeRemoveTool(api))
             .register(SetInterceptTool(api))
             .register(ImportBCheckTool(api))
+            // v0.6 send-to, utilities, config, task engine
+            .register(SendToRepeaterTool(api))
+            .register(SendToIntruderTool(api))
+            .register(SendToOrganizerTool(api))
+            .register(TransformTool(api))
+            .register(RandomStringTool(api))
+            .register(SetTaskEngineTool(api))
+            .register(ExportBurpConfigTool(api))
+            .register(ImportBurpConfigTool(api))
 
-        val mcp = McpServer(host, port, registry, log, serverVersion = "0.5.0", authToken = token)
+        val mcp = McpServer(host, port, registry, log, serverVersion = "0.6.0", authToken = token)
         mcp.start()
         server = mcp
 

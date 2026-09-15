@@ -27,7 +27,7 @@ Requires JDK 17+ (local JDK 17 is fine; Burp ships its own JRE 21).
 
 ```bash
 ./gradlew shadowJar
-# -> build/libs/burp-mcp-me262-0.5.0.jar
+# -> build/libs/burp-mcp-me262-0.6.0.jar
 ```
 
 If the Gradle wrapper jar is missing (no gradle installed yet), bootstrap once:
@@ -39,7 +39,7 @@ brew install gradle && gradle wrapper --gradle-version 8.10.2
 ## Load into Burp
 
 1. Burp Suite Pro > **Extensions** > **Installed** > **Add**.
-2. Type **Java**, select `build/libs/burp-mcp-me262-0.5.0.jar`.
+2. Type **Java**, select `build/libs/burp-mcp-me262-0.6.0.jar`.
 3. The **Output** tab shows: `Burp-MCP-Me262 ready -> http://127.0.0.1:9262/`.
 4. A **Me262** tab appears in Burp showing the endpoint and the loaded tools.
 
@@ -53,7 +53,7 @@ claude mcp add --transport sse me262 http://127.0.0.1:9262/ --scope project
 
 Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
 
-## Tools (v0.5.0)
+## Tools (v0.6.0)
 
 | tool | what it does |
 |------|--------------|
@@ -73,6 +73,14 @@ Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
 | `scope_remove` | remove a URL/prefix from Burp's Target scope |
 | `set_intercept` | turn Burp Proxy intercept on/off |
 | `import_bcheck` | import a BCheck so it runs in active scans — **Pro** |
+| `send_to_repeater` | hand a request to Repeater |
+| `send_to_intruder` | place a request in Intruder |
+| `send_to_organizer` | store a request in Organizer |
+| `transform` | url/base64/html encode & decode |
+| `random_string` | random alphanumeric string |
+| `set_task_engine` | pause/resume Burp's task engine |
+| `export_burp_config` | export project/user options as JSON |
+| `import_burp_config` | import options — gated by `-Dme262.allowConfigEdits` |
 
 See [ROADMAP.md](ROADMAP.md) for what's next and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 for how it fits together.
@@ -82,6 +90,7 @@ for how it fits together.
 - Binds to `127.0.0.1` only; rejects non-loopback `Origin` (DNS-rebinding defence).
 - Optional bearer token: start Burp with `-Dme262.token=SECRET`, then
   `claude mcp add --transport sse me262 http://127.0.0.1:9262/ --header "Authorization: Bearer SECRET"`.
+- **Config edits:** `import_burp_config` is disabled unless Burp is started with `-Dme262.allowConfigEdits=true`.
 - **ROE guard:** `fuzz`, `start_active_scan` and `start_crawl` refuse targets
   not in Burp's Target scope. Override for lab work with `-Dme262.allowOutOfScope=true`.
 

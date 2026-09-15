@@ -25,7 +25,12 @@ Legend: [x] done  [~] partial  [ ] planned
 - [x] `scope_add` / `scope_check` / `scope_remove`
 - [x] `get_collaborator_*` (Pro) generate + poll interactions
 - [x] `import_bcheck` (Scanner.bChecks) — runs in subsequent audits
-- [x] `set_intercept`  (set_task_engine: no Montoya API in 2025.5)
+- [x] `set_intercept` / `set_task_engine` (BurpSuite.taskExecutionEngine)
+
+## v0.6 — send-to, utilities, config (done)
+- [x] `send_to_repeater`, `send_to_intruder`, `send_to_organizer`
+- [x] `transform` (url/base64/html encode+decode), `random_string`
+- [x] `export_burp_config` / `import_burp_config` (gated by -Dme262.allowConfigEdits)
 
 ## Hardening / ops
 - [x] Suite status tab (endpoint + tool list)  [ ] interactive toggles
@@ -37,5 +42,5 @@ Legend: [x] done  [~] partial  [ ] planned
 ## Known API ceilings (cannot fix in MCP)
 - No cross-extension invocation / enumeration in Montoya.
 - No programmatic "run Intruder UI attack + collect results" — we build our own.
-- No `crawlAndAudit` / task-engine state in Montoya 2025.5 — omitted.
+- No single-call `crawlAndAudit` in Montoya 2025.5 — use start_crawl + start_active_scan.
 - Macros / session-handling rule *execution* are not directly drivable.
