@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+- Fix: rewrite the SSE transport on a raw java.net.ServerSocket. Burp's trimmed
+  (jlink) JRE has no com.sun.net.httpserver, which threw ClassNotFoundException
+  on load. Now uses only java.base (chunked SSE). Loads inside Burp.
+
 ## 1.0.0
 - Milestone: 26 tools across HTTP, Scanner (Pro), fuzzer, send-to, scope,
   sitemap, Collaborator, BChecks, control, utilities, config.
