@@ -8,12 +8,12 @@ Legend: [x] done  [~] partial  [ ] planned
 - [x] `send_http_request`, `get_proxy_history`, `start_active_scan`
 - [x] Loopback bind + Origin check (DNS-rebinding hardening)
 
-## v0.2 — Scanner loop (the Pro unlock)
-- [ ] `get_scanner_issues` — read audit issues (name, severity, confidence, URL, detail)
-- [ ] `scan_status` — progress/insertion-point counts for a running audit
-- [ ] `start_crawl` and `crawl_and_audit` (Scanner.startCrawl)
-- [ ] `generate_report` — HTML/XML via Scanner.generateReport
-- [ ] Track Audit/Crawl handles in a scan registry so issues map to a scan id
+## v0.2 — Scanner loop (the Pro unlock) — done
+- [x] `get_scanner_issues` — read audit issues (name, severity, confidence, URL, detail)
+- [x] `scan_status` — progress/insertion-point counts for a running audit
+- [x] `start_crawl` (Scanner.startCrawl)  [ ] crawl_and_audit
+- [x] `generate_report` — HTML/XML via Scanner.generateReport
+- [x] Track Audit/Crawl handles in a scan registry (ScanRegistry) so issues map to a scan id
 
 ## v0.3 — native fuzzer (Intruder replacement)
 - [ ] `fuzz` — sniper/cluster-bomb over `api.http().sendRequests()`, with

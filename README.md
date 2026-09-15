@@ -27,7 +27,7 @@ Requires JDK 17+ (local JDK 17 is fine; Burp ships its own JRE 21).
 
 ```bash
 ./gradlew shadowJar
-# -> build/libs/burp-mcp-me262-0.1.0.jar
+# -> build/libs/burp-mcp-me262-0.2.0.jar
 ```
 
 If the Gradle wrapper jar is missing (no gradle installed yet), bootstrap once:
@@ -39,7 +39,7 @@ brew install gradle && gradle wrapper --gradle-version 8.10.2
 ## Load into Burp
 
 1. Burp Suite Pro > **Extensions** > **Installed** > **Add**.
-2. Type **Java**, select `build/libs/burp-mcp-me262-0.1.0.jar`.
+2. Type **Java**, select `build/libs/burp-mcp-me262-0.2.0.jar`.
 3. The **Output** tab shows: `Burp-MCP-Me262 ready -> http://127.0.0.1:9262/`.
 
 Override host/port by launching Burp with `-Dme262.port=9262 -Dme262.host=127.0.0.1`.
@@ -52,13 +52,17 @@ claude mcp add --transport sse me262 http://127.0.0.1:9262/ --scope project
 
 Approve it (`/mcp` or restart), then the `mcp__me262__*` tools appear.
 
-## Tools (v0.1.0)
+## Tools (v0.2.0)
 
 | tool | what it does |
 |------|--------------|
 | `send_http_request` | send a URL or raw request through Burp's HTTP stack |
 | `get_proxy_history` | read recent Proxy history, with substring filter |
-| `start_active_scan` | launch a Pro active audit (Scanner) — **Pro only** |
+| `start_active_scan` | launch a Pro active audit; returns a scan id — **Pro** |
+| `start_crawl` | crawl from a seed URL; returns a scan id — **Pro** |
+| `scan_status` | progress of scans started via Me262 |
+| `get_scanner_issues` | list audit issues (per scan or whole site map) — **Pro** |
+| `generate_report` | write an HTML/XML Scanner report to a file — **Pro** |
 
 See [ROADMAP.md](ROADMAP.md) for what's next and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 for how it fits together.
