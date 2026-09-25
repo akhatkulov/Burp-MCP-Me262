@@ -93,7 +93,7 @@ method with a default.
 
 ## Group 3 — Strategic (separate PR): modern MCP transport
 
-### 3.1 Streamable HTTP transport  [ ]
+### 3.1 Streamable HTTP transport  [x]
 The current transport is the deprecated `2024-11-05` HTTP+SSE two-endpoint
 scheme. The current MCP standard is **Streamable HTTP** (`2025-06-18`): a single
 endpoint that accepts POST (JSON-RPC, may reply with either a JSON body or an
@@ -112,14 +112,19 @@ Plan:
 - Bump advertised `protocolVersion` and add `MCP-Protocol-Version` request
   header handling.
 
-### 3.2 Progress notifications  [ ]
+### 3.2 Progress notifications  [ ] (deferred)
+
+> Deferred: the current scan tools are non-blocking (they return a scan id and
+> the client polls `scan_status`), so there is no long-running `tools/call` for a
+> `progressToken` to attach to. Revisit alongside a blocking `await_scan` tool.
+
 Long scans force the client to poll `scan_status`. With Streamable HTTP (or even
 the current SSE stream), emit `notifications/progress` for a running audit/crawl:
 a background poller reads `requestCount`/`statusMessage` and pushes progress
 tied to the `tools/call` `progressToken`. Requires the dispatcher to be able to
 send server-initiated messages, which the SSE session already supports.
 
-### 3.3 (stretch) `resources` + `prompts` capabilities  [ ]
+### 3.3 (stretch) `resources` + `prompts` capabilities  [ ] (deferred)
 Expose proxy history / site map as MCP **resources**, and ship a couple of
 **prompts** ("audit this endpoint", "triage these issues"). Advertised in
 `initialize` capabilities. Out of scope for the first Group 3 PR.

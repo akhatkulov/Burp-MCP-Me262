@@ -39,6 +39,8 @@ class McpServer(
     private val dispatcher =
         Dispatcher(registry, serverName, serverVersion, protocolVersion) { logging.logToError("[Me262] $it") }
     private val sessions = ConcurrentHashMap<String, Session>()
+    /** Streamable-HTTP session ids (Mcp-Session-Id); tracked so DELETE can end them. */
+    private val streamSessions = ConcurrentHashMap.newKeySet<String>()
     private val pool = Executors.newCachedThreadPool()
 
     @Volatile private var running = false
@@ -63,6 +65,7 @@ class McpServer(
         running = false
         sessions.values.forEach { it.open = false; runCatching { it.socket.close() } }
         sessions.clear()
+        streamSessions.clear()
         runCatching { server?.close() }
         pool.shutdownNow()
         logging.logToOutput("[Me262] MCP server stopped")
@@ -110,13 +113,85 @@ class McpServer(
             "GET" -> handleSse(socket, output)
             "POST" -> {
                 val len = headers["content-length"]?.toIntOrNull() ?: 0
-                val body = readN(input, len)
-                writeSimple(output, 202, "")
-                processPost(target, String(body, Charsets.UTF_8))
+                val body = String(readN(input, len), Charsets.UTF_8)
+                if (target.contains("sessionId=")) {
+                    // Legacy HTTP+SSE transport (2024-11-05): ack now, push the
+                    // reply over the client's separate SSE stream.
+                    writeSimple(output, 202, "")
+                    processPost(target, body)
+                } else {
+                    // Streamable HTTP transport (2025-06-18): reply on this POST.
+                    handleStreamablePost(output, body, headers["accept"])
+                }
+                socket.close()
+            }
+            "DELETE" -> {
+                // Streamable HTTP session termination.
+                headers["mcp-session-id"]?.let { streamSessions.remove(it) }
+                writeSimple(output, 200, "")
                 socket.close()
             }
             else -> { writeSimple(output, 405, "method not allowed"); socket.close() }
         }
+    }
+
+    /**
+     * Streamable HTTP: a single POST carries one JSON-RPC message and the reply
+     * comes straight back on the same connection — as `application/json`, or as a
+     * one-shot `text/event-stream` when the client accepts only that.
+     */
+    private fun handleStreamablePost(output: OutputStream, body: String, accept: String?) {
+        val req = runCatching { json.decodeFromString<JsonRpcRequest>(body) }
+            .getOrElse {
+                logging.logToError("[Me262] malformed JSON-RPC (streamable): ${it.message}")
+                writeSimple(output, 400, "malformed JSON-RPC")
+                return
+            }
+        val response = dispatcher.dispatch(req)
+        if (response == null) {
+            // Notification — nothing to return.
+            writeSimple(output, 202, "")
+            return
+        }
+        val extraHeaders = if (req.method == "initialize") {
+            val sid = UUID.randomUUID().toString()
+            streamSessions.add(sid)
+            "Mcp-Session-Id: $sid\r\n"
+        } else ""
+        val payload = json.encodeToString(JsonRpcResponse.serializer(), response)
+        val sseOnly = accept != null && accept.contains("text/event-stream") && !accept.contains("application/json")
+        if (sseOnly) writeSseOnce(output, payload, extraHeaders) else writeJson(output, payload, extraHeaders)
+    }
+
+    private fun writeJson(out: OutputStream, jsonBody: String, extraHeaders: String) {
+        val bytes = jsonBody.toByteArray(Charsets.UTF_8)
+        val sb = StringBuilder("HTTP/1.1 200 OK\r\n")
+            .append("Content-Type: application/json\r\n")
+            .append(extraHeaders)
+            .append(SECURITY_HEADERS)
+            .append("Content-Length: ").append(bytes.size).append("\r\n")
+            .append("Connection: close\r\n\r\n")
+        out.write(sb.toString().toByteArray(Charsets.ISO_8859_1))
+        out.write(bytes)
+        out.flush()
+    }
+
+    /** One JSON-RPC response framed as a single SSE event, then EOF (Connection: close). */
+    private fun writeSseOnce(out: OutputStream, jsonBody: String, extraHeaders: String) {
+        val header = buildString {
+            append("HTTP/1.1 200 OK\r\n")
+            append("Content-Type: text/event-stream\r\n")
+            append("Cache-Control: no-store\r\n")
+            append(extraHeaders)
+            append(SECURITY_HEADERS)
+            append("Connection: close\r\n\r\n")
+        }
+        out.write(header.toByteArray(Charsets.ISO_8859_1))
+        val sb = StringBuilder("event: message\n")
+        for (line in jsonBody.split("\n")) sb.append("data: ").append(line).append('\n')
+        sb.append('\n')
+        out.write(sb.toString().toByteArray(Charsets.UTF_8))
+        out.flush()
     }
 
     private fun handleSse(socket: Socket, output: OutputStream) {

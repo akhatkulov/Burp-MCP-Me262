@@ -22,6 +22,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
 /** Starts the real SSE transport (no Burp) and drives a full MCP handshake. */
@@ -94,6 +96,43 @@ class McpServerIntegrationTest {
         }
     }
 
+    @Test fun streamableHttpInitializeAndToolCall() {
+        val port = freePort()
+        val server = McpServer("127.0.0.1", port, echoRegistry(), noopLogging(), serverVersion = "itest")
+        server.start()
+        try {
+            val url = "http://127.0.0.1:$port/"
+            // initialize with a modern protocol version -> echoed back, session id issued.
+            val init = postJson(url, """{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}""")
+            assertEquals(200, init.code)
+            assertTrue(init.contentType?.startsWith("application/json") == true, "content-type: ${init.contentType}")
+            val initObj = Json.parseToJsonElement(init.body).jsonObject["result"]!!.jsonObject
+            assertEquals("2025-06-18", initObj["protocolVersion"]!!.jsonPrimitive.content)
+            assertEquals("itest", initObj["serverInfo"]!!.jsonObject["version"]!!.jsonPrimitive.content)
+            assertNotNull(init.sessionId, "Mcp-Session-Id header expected on initialize")
+
+            // tools/call returns the result directly on the POST (no separate SSE).
+            val call = postJson(url, """{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arguments":{"x":"pong"}}}""")
+            assertEquals(200, call.code)
+            val res = Json.parseToJsonElement(call.body).jsonObject["result"]!!.jsonObject
+            assertEquals("pong", res["content"]!!.jsonArray[0].jsonObject["text"]!!.jsonPrimitive.content)
+        } finally {
+            server.stop()
+        }
+    }
+
+    @Test fun streamableHttpNotificationReturns202() {
+        val port = freePort()
+        val server = McpServer("127.0.0.1", port, echoRegistry(), noopLogging(), serverVersion = "itest")
+        server.start()
+        try {
+            val r = postJson("http://127.0.0.1:$port/", """{"jsonrpc":"2.0","method":"notifications/initialized"}""")
+            assertEquals(202, r.code)
+        } finally {
+            server.stop()
+        }
+    }
+
     private fun post(url: String, body: String) {
         val c = URI(url).toURL().openConnection() as HttpURLConnection
         c.requestMethod = "POST"
@@ -102,5 +141,25 @@ class McpServerIntegrationTest {
         OutputStreamWriter(c.outputStream).use { it.write(body) }
         c.responseCode
         c.disconnect()
+    }
+
+    private data class Resp(val code: Int, val body: String, val contentType: String?, val sessionId: String?)
+
+    private fun postJson(url: String, body: String): Resp {
+        val c = URI(url).toURL().openConnection() as HttpURLConnection
+        c.requestMethod = "POST"
+        c.doOutput = true
+        c.connectTimeout = 3000
+        c.readTimeout = 6000
+        c.setRequestProperty("Content-Type", "application/json")
+        c.setRequestProperty("Accept", "application/json, text/event-stream")
+        OutputStreamWriter(c.outputStream).use { it.write(body) }
+        val code = c.responseCode
+        val stream = if (code in 200..299) c.inputStream else c.errorStream
+        val text = stream?.bufferedReader()?.use { it.readText() } ?: ""
+        val ct = c.getHeaderField("Content-Type")
+        val sid = c.getHeaderField("Mcp-Session-Id")
+        c.disconnect()
+        return Resp(code, text, ct, sid)
     }
 }

@@ -24,7 +24,11 @@ class Dispatcher(
     /** Returns the response, or null for a notification (no reply expected). */
     fun dispatch(req: JsonRpcRequest): JsonRpcResponse? = when (req.method) {
         "initialize" -> ok(req.id, buildJsonObject {
-            put("protocolVersion", protocolVersion)
+            // Echo the client's requested protocol version when we support it,
+            // otherwise fall back to our default. Lets one server speak to both
+            // the legacy SSE (2024-11-05) and Streamable HTTP (2025-06-18) clients.
+            val requested = (req.params as? JsonObject)?.get("protocolVersion")?.jsonPrimitive?.contentOrNull
+            put("protocolVersion", if (requested != null && requested in SUPPORTED_PROTOCOLS) requested else protocolVersion)
             putJsonObject("capabilities") { putJsonObject("tools") {} }
             putJsonObject("serverInfo") {
                 put("name", serverName)
@@ -76,4 +80,9 @@ class Dispatcher(
     private fun ok(id: JsonElement?, result: JsonElement) = JsonRpcResponse(id = id, result = result)
     private fun err(id: JsonElement?, code: Int, message: String) =
         JsonRpcResponse(id = id, error = JsonRpcError(code, message))
+
+    companion object {
+        /** Protocol revisions we can speak; the negotiated one is echoed to the client. */
+        val SUPPORTED_PROTOCOLS = setOf("2024-11-05", "2025-03-26", "2025-06-18")
+    }
 }

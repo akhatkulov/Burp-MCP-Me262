@@ -43,7 +43,13 @@ Legend: [x] done  [~] partial  [ ] planned
 - [x] Optional bearer token on the MCP endpoint (-Dme262.token)
 - [~] Structured JSON tool outputs — `structuredContent` on scan_status + get_scanner_issues (opt-in Tool.run())
 - [x] ROE guard on active tools (Burp scope; -Dme262.allowOutOfScope override)
-- [x] Unit + integration tests: combinatorics, registry, dispatch, live SSE transport, transform codecs, structured output (21)
+- [x] Unit + integration tests: combinatorics, registry, dispatch, live SSE transport, transform codecs, structured output, Streamable HTTP (23)
+
+## Transport (Group 3)
+- [x] Streamable HTTP transport (2025-06-18) alongside legacy HTTP+SSE (dual-stack)
+- [x] Protocol-version negotiation on initialize; Mcp-Session-Id; DELETE session
+- [ ] `notifications/progress` (deferred — scan tools are non-blocking, polled)
+- [ ] `resources` / `prompts` capabilities
 
 ## Known API ceilings (cannot fix in MCP)
 - No cross-extension invocation / enumeration in Montoya.

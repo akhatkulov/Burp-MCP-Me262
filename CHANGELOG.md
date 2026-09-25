@@ -1,6 +1,17 @@
 # Changelog
 
 ## Unreleased
+### Group 3 — transport modernisation
+- Streamable HTTP transport (`2025-06-18`): a single `POST /` returns the
+  JSON-RPC reply directly (`application/json`, or one-shot SSE when the client
+  accepts only `text/event-stream`), issues an `Mcp-Session-Id` on `initialize`,
+  and honours `DELETE /` to end a session. The endpoint is now dual-stack — the
+  legacy HTTP+SSE (`2024-11-05`) path still works on `GET /` + `/?sessionId=`.
+- `initialize` negotiates the protocol version (echoes the client's when
+  supported: 2024-11-05 / 2025-03-26 / 2025-06-18).
+- Deferred (documented in SPEC): `notifications/progress` (scan tools are
+  non-blocking/polled) and `resources`/`prompts` capabilities.
+
 ### Group 2 — read/compare + structured output
 - Add `passive_scan` — Burp Pro passive audit (no active payloads) returning a
   scan id, read via `scan_status`/`get_scanner_issues`. Now 28 tools.

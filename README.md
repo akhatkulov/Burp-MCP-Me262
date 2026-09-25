@@ -12,9 +12,11 @@
 
 Me262 is a native **Montoya-API** extension that runs an **MCP server inside Burp
 Suite Pro**, exposing **28 tools** to Claude Code, Cursor, Cline, Windsurf,
-OpenCode, Claude Desktop, and any MCP client. It runs its own SSE transport on a
+OpenCode, Claude Desktop, and any MCP client. It runs its own transport on a
 raw socket (no `com.sun.net.httpserver`, so it loads in Burp's trimmed JRE) and
-needs no third-party runtime beyond one JSON library.
+needs no third-party runtime beyond one JSON library. The endpoint is
+dual-stack: modern **Streamable HTTP** (`2025-06-18`) and legacy **HTTP+SSE**
+(`2024-11-05`) clients both work against the same URL.
 
 ## Why Me262
 
@@ -32,7 +34,7 @@ unlocks the Pro engine and adds the discipline you actually need on a live targe
 | Scope / site map / send-to (Repeater/Intruder/Comparer) | partial | ✅ |
 | **ROE guard** — refuses out-of-scope targets | ❌ | ✅ |
 | Bearer-token auth on the endpoint | ❌ | ✅ |
-| Unit + live-transport tests | ❌ | ✅ 13 |
+| Unit + live-transport tests | ❌ | ✅ 23 |
 
 ## Quickstart
 
@@ -99,7 +101,7 @@ starts a scan or sends traffic. See **[docs/EXTENSION-COMPAT.md](docs/EXTENSION-
 ## Build & test
 
 ```bash
-./gradlew test        # 13 tests: combinatorics, registry, JSON-RPC dispatch, live SSE transport
+./gradlew test        # 23 tests: combinatorics, registry, dispatch, transform codecs, live SSE + Streamable HTTP transport
 ./gradlew shadowJar   # the loadable fat jar
 ```
 
