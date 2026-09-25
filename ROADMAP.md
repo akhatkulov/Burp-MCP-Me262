@@ -14,6 +14,7 @@ Legend: [x] done  [~] partial  [ ] planned
 - [x] `start_crawl` (Scanner.startCrawl)  [ ] crawl_and_audit
 - [x] `generate_report` — HTML/XML via Scanner.generateReport
 - [x] Track Audit/Crawl handles in a scan registry (ScanRegistry) so issues map to a scan id
+- [x] `stop_scan` — cancel + drop a running audit/crawl (ScanTask.delete())
 
 ## v0.3 — native fuzzer (Intruder replacement) — done
 - [x] `fuzz` — sniper/clusterbomb/pitchfork over Burp HTTP, payload list/wordlist,

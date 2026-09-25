@@ -64,6 +64,10 @@ class FuzzTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
             putJsonObject("match") { put("type", "string") }
             putJsonObject("filter_status") { put("type", "array"); putJsonObject("items") { put("type", "integer") } }
             putJsonObject("extract") { put("type", "string") }
+            putJsonObject("update_content_length") {
+                put("type", "boolean")
+                put("description", "recompute Content-Length after payload substitution (default true; set false for desync tests)")
+            }
         }
         putJsonArray("required") { add("host"); add("port"); add("template") }
     }
@@ -89,6 +93,7 @@ class FuzzTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
         val concurrency = (arguments["concurrency"]?.jsonPrimitive?.intOrNull ?: 10).coerceIn(1, 30)
         val max = (arguments["max"]?.jsonPrimitive?.intOrNull ?: 500).coerceIn(1, 5000)
         val match = arguments["match"]?.jsonPrimitive?.contentOrNull
+        val updateContentLength = arguments["update_content_length"]?.jsonPrimitive?.booleanOrNull ?: true
         val extractRe = arguments["extract"]?.jsonPrimitive?.contentOrNull?.let { Regex(it) }
         val keepStatuses = (arguments["filter_status"] as? JsonArray)
             ?.mapNotNull { it.jsonPrimitive.intOrNull }?.toSet()
@@ -101,7 +106,7 @@ class FuzzTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
         val pool = Executors.newFixedThreadPool(concurrency)
         val results = try {
             combos.map { combo ->
-                pool.submit(Callable { runOne(service, template, markers, combo, match, extractRe) })
+                pool.submit(Callable { runOne(service, template, markers, combo, match, extractRe, updateContentLength) })
             }.map { f ->
                 runCatching { f.get(60, TimeUnit.SECONDS) }
                     .getOrElse { Result("?", -1, 0, 0, null, false, it.message ?: "timeout") }
@@ -173,11 +178,19 @@ class FuzzTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
         combo: List<String>,
         match: String?,
         extractRe: Regex?,
+        updateContentLength: Boolean,
     ): Result {
         var raw = template
         for ((i, marker) in markers.withIndex()) raw = raw.replace(marker, combo[i])
         val label = combo.joinToString(" | ")
-        val request = HttpRequest.httpRequest(service, raw)
+        // Building from raw keeps whatever Content-Length the template had. When a
+        // payload changed the body length, re-setting the body forces Montoya to
+        // recompute a correct Content-Length (unless the caller opted out).
+        val request = HttpRequest.httpRequest(service, raw).let {
+            // Only recompute for requests that actually carry a body, so we never
+            // inject a spurious Content-Length: 0 into a GET fuzzed in URL/headers.
+            if (updateContentLength && it.bodyToString().isNotEmpty()) it.withBody(it.bodyToString()) else it
+        }
         val t0 = System.nanoTime()
         return try {
             val rr = api.http().sendRequest(request)

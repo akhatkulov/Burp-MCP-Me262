@@ -30,4 +30,7 @@ class ScanRegistry {
     fun crawl(id: String): Crawl? = crawls[id]
     fun auditIds(): List<String> = audits.keys.sorted()
     fun crawlIds(): List<String> = crawls.keys.sorted()
+
+    /** Drop a handle after it is stopped/deleted. Returns true if an id was removed. */
+    fun remove(id: String): Boolean = (audits.remove(id) != null) || (crawls.remove(id) != null)
 }

@@ -7,7 +7,7 @@ Claude Code (MCP client)
 +-------------------------------------------------------+
 |  Me262Extension  (BurpExtension, runs in Burp's JVM)  |
 |                                                       |
-|   McpServer  (com.sun.net.httpserver.HttpServer)      |
+|   McpServer  (raw java.net.ServerSocket, chunked SSE) |
 |     GET  /                -> SSE stream, emits         |
 |                              event: endpoint           |
 |     POST /?sessionId=...   -> JSON-RPC message,        |
@@ -25,10 +25,16 @@ Claude Code (MCP client)
 ```
 
 ## Transport
-We implement the MCP **SSE transport** directly on the JDK's built-in
-`HttpServer` — no Ktor, no MCP SDK — to keep the extension small and avoid
-classloader conflicts inside Burp. The only bundled runtime dependency is
-`kotlinx-serialization-json`.
+We implement the MCP **SSE transport** directly on a raw
+`java.net.ServerSocket` (chunked `Transfer-Encoding`) — no Ktor, no MCP SDK, and
+deliberately **not** `com.sun.net.httpserver`, which is absent from Burp's
+trimmed (jlink) JRE and threw `ClassNotFoundException` on load (fixed in v1.0.1).
+Only `java.base` APIs are used, so it loads inside Burp. The only bundled runtime
+dependency is `kotlinx-serialization-json`.
+
+> The `2024-11-05` HTTP+SSE transport implemented here is the older MCP scheme.
+> Migration to the current **Streamable HTTP** (`2025-06-18`) transport is
+> tracked in [SPEC-maturity.md](SPEC-maturity.md) Group 3.
 
 Flow (matches what MCP clients expect):
 1. Client opens `GET /`. Server replies `text/event-stream` and sends
@@ -47,4 +53,8 @@ Flow (matches what MCP clients expect):
 ## Security
 - Binds to `127.0.0.1` only.
 - Rejects non-loopback `Origin` headers (DNS-rebinding defence).
-- No auth token yet (roadmap v0.4) — do not expose the port off-host.
+- Optional bearer token on the endpoint (`-Dme262.token=SECRET`); when set, every
+  request must send `Authorization: Bearer SECRET`.
+- Emits hardening response headers (`X-Frame-Options`, `X-Content-Type-Options`,
+  `Content-Security-Policy: default-src 'none'`, `Referrer-Policy`).
+- Still loopback-first — do not expose the port off-host.

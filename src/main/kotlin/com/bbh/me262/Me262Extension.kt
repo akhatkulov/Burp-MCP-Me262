@@ -34,6 +34,7 @@ import com.bbh.me262.tools.SetInterceptTool
 import com.bbh.me262.tools.SitemapQueryTool
 import com.bbh.me262.tools.StartActiveScanTool
 import com.bbh.me262.tools.StartCrawlTool
+import com.bbh.me262.tools.StopScanTool
 
 /**
  * Burp-MCP-Me262 — our own Montoya-based MCP server for Burp Suite Pro.
@@ -72,6 +73,7 @@ class Me262Extension : BurpExtension {
             .register(StartActiveScanTool(api, scans, roe))
             .register(StartCrawlTool(api, scans, roe))
             .register(ScanStatusTool(scans))
+            .register(StopScanTool(scans))
             .register(GetScannerIssuesTool(api, scans))
             .register(GenerateReportTool(api, scans))
             // v0.4 visibility & control

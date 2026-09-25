@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+- Add `stop_scan` — cancel and drop an audit/crawl started via Me262
+  (`ScanTask.delete()`); registry gains `remove(id)`. Now 27 tools.
+- Fix `fuzz`: recompute `Content-Length` after payload substitution so
+  body-fuzzing sends a correct length (new `update_content_length` arg, default
+  true; set false for desync tests).
+- Docs: correct `ARCHITECTURE.md` (raw `ServerSocket` transport, bearer token
+  shipped); add `docs/SPEC-maturity.md` planning groups 1–3.
+
 ## 1.0.2
 - Fix: Me262 status tab showed raw <html> markup. Burp's Look-and-Feel disables
   HTML in Swing components, so the JLabel rendered literally. Rebuilt the tab as

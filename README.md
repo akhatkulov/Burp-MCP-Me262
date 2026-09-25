@@ -11,7 +11,7 @@
 [![Stars](https://img.shields.io/github/stars/akhatkulov/Burp-MCP-Me262?style=social)](https://github.com/akhatkulov/Burp-MCP-Me262/stargazers)
 
 Me262 is a native **Montoya-API** extension that runs an **MCP server inside Burp
-Suite Pro**, exposing **26 tools** to Claude Code, Cursor, Cline, Windsurf,
+Suite Pro**, exposing **27 tools** to Claude Code, Cursor, Cline, Windsurf,
 OpenCode, Claude Desktop, and any MCP client. It runs its own SSE transport on a
 raw socket (no `com.sun.net.httpserver`, so it loads in Burp's trimmed JRE) and
 needs no third-party runtime beyond one JSON library.
@@ -45,7 +45,7 @@ cd Burp-MCP-Me262
 ```
 
 1. **Load in Burp**: Extensions > Installed > Add > type **Java** > pick the jar.
-   The Output tab prints `ready -> http://127.0.0.1:9262/ (26 tools)`, and a
+   The Output tab prints `ready -> http://127.0.0.1:9262/ (27 tools)`, and a
    **Me262** tab appears.
 2. **Connect Claude Code**:
    ```bash
@@ -56,12 +56,12 @@ cd Burp-MCP-Me262
 Other clients (Cursor, Cline, Windsurf, OpenCode, Claude Desktop, `mcp-remote`):
 see **[docs/CONNECTING.md](docs/CONNECTING.md)**.
 
-## Tools (26)
+## Tools (27)
 
 | group | tools |
 |---|---|
 | HTTP | `send_http_request`, `get_proxy_history`, `get_websocket_history` |
-| Scanner (Pro) | `start_active_scan`, `start_crawl`, `scan_status`, `get_scanner_issues`, `generate_report` |
+| Scanner (Pro) | `start_active_scan`, `start_crawl`, `scan_status`, `stop_scan`, `get_scanner_issues`, `generate_report` |
 | Fuzzer | `fuzz` (sniper / clusterbomb / pitchfork) |
 | Send-to | `send_to_repeater`, `send_to_intruder`, `send_to_organizer`, `send_to_comparer` |
 | Scope / map | `scope_check`, `scope_add`, `scope_remove`, `sitemap_query` |
