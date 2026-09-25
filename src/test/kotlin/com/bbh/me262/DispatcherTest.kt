@@ -3,6 +3,7 @@ package com.bbh.me262
 import com.bbh.me262.mcp.Dispatcher
 import com.bbh.me262.mcp.JsonRpcRequest
 import com.bbh.me262.mcp.Tool
+import com.bbh.me262.mcp.ToolOutput
 import com.bbh.me262.mcp.ToolRegistry
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -23,6 +24,14 @@ private class EchoTool(override val name: String = "echo") : Tool {
         arguments["x"]?.jsonPrimitive?.content ?: "<none>"
 }
 
+private class StructuredTool(override val name: String = "structured") : Tool {
+    override val description = "emits structuredContent"
+    override val inputSchema = buildJsonObject {}
+    override fun execute(arguments: JsonObject) = "text-form"
+    override fun run(arguments: JsonObject) =
+        ToolOutput("text-form", buildJsonObject { put("ok", true) })
+}
+
 private class BoomTool(override val name: String = "boom") : Tool {
     override val description = "throws"
     override val inputSchema = buildJsonObject {}
@@ -31,7 +40,7 @@ private class BoomTool(override val name: String = "boom") : Tool {
 
 class DispatcherTest {
     private fun disp() = Dispatcher(
-        ToolRegistry().register(EchoTool()).register(BoomTool()),
+        ToolRegistry().register(EchoTool()).register(BoomTool()).register(StructuredTool()),
         serverName = "burp-mcp-me262", serverVersion = "test", protocolVersion = "2024-11-05",
     )
 
@@ -48,7 +57,7 @@ class DispatcherTest {
     @Test fun toolsListReturnsRegistered() {
         val r = disp().dispatch(req("tools/list"))!!
         val names = r.result!!.jsonObject["tools"]!!.jsonArray.map { it.jsonObject["name"]!!.jsonPrimitive.content }
-        assertEquals(listOf("echo", "boom"), names)
+        assertEquals(listOf("echo", "boom", "structured"), names)
     }
 
     @Test fun toolsCallExecutes() {
@@ -66,6 +75,22 @@ class DispatcherTest {
         val params = buildJsonObject { put("name", "boom") }
         val r = disp().dispatch(req("tools/call", params))!!
         assertTrue(r.result!!.jsonObject["isError"]!!.jsonPrimitive.content.toBoolean())
+    }
+
+    @Test fun structuredContentPresentWhenToolProvidesIt() {
+        val params = buildJsonObject { put("name", "structured") }
+        val res = disp().dispatch(req("tools/call", params))!!.result!!.jsonObject
+        assertEquals("text-form", res["content"]!!.jsonArray[0].jsonObject["text"]!!.jsonPrimitive.content)
+        assertEquals(true, res["structuredContent"]!!.jsonObject["ok"]!!.jsonPrimitive.content.toBoolean())
+    }
+
+    @Test fun structuredContentAbsentForPlainTool() {
+        val params = buildJsonObject {
+            put("name", "echo")
+            put("arguments", buildJsonObject { put("x", "hi") })
+        }
+        val res = disp().dispatch(req("tools/call", params))!!.result!!.jsonObject
+        assertNull(res["structuredContent"])
     }
 
     @Test fun unknownMethodErrors() {

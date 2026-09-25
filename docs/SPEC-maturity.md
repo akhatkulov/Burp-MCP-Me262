@@ -10,7 +10,7 @@ transport modernisation that gets its own PR.
 
 ## Group 1 — Quick wins (this PR)
 
-### 1.1 `stop_scan` tool  [ ]
+### 1.1 `stop_scan` tool  [x]
 **Gap:** Scans can be started (`start_active_scan`, `start_crawl`) and read
 (`scan_status`, `get_scanner_issues`) but never stopped. Montoya's `Audit` and
 `Crawl` both extend `ScanTask`, which exposes `delete()`.
@@ -27,7 +27,7 @@ transport modernisation that gets its own PR.
 - Registered in `Me262Extension` in the v0.2 scanner block.
 - Output: `Stopped and removed audit-3.` or `unknown scan id: X`.
 
-### 1.2 Fix `FuzzTool` request-building bugs  [ ]
+### 1.2 Fix `FuzzTool` request-building bugs  [x]
 Two defects in `FuzzTool.runOne`:
 
 **(a) Stale Content-Length.** Markers are substituted into the raw template and
@@ -49,7 +49,7 @@ control is a larger change tracked in Group 2 / future.)
 Add a `CombinatoricsTest`-style unit path is not possible (needs Montoya HTTP),
 so this is covered by manual/lab verification noted in the PR.
 
-### 1.3 Refresh stale docs  [ ]
+### 1.3 Refresh stale docs  [x]
 `docs/ARCHITECTURE.md` predates the v1.0.1/v1.0.2 rewrites and is wrong on two
 points:
 - Says transport is `com.sun.net.httpserver.HttpServer` — it is now a raw
@@ -62,7 +62,7 @@ points:
 
 ## Group 2 — Medium (follow-up, additive)
 
-### 2.1 Extend `transform`  [ ]
+### 2.1 Extend `transform`  [x]
 Today: `url`, `base64`, `html` encode/decode only. Add ops:
 - `hex_encode` / `hex_decode`
 - `gzip_compress` / `gzip_decompress` (java.util.zip)
@@ -74,12 +74,12 @@ Today: `url`, `base64`, `html` encode/decode only. Add ops:
 All via `api.utilities()` where available, else pure JDK. Keep the single
 `op`/`input` shape; extend the enum + description.
 
-### 2.2 `passive_scan` tool  [ ]
+### 2.2 `passive_scan` tool  [x]
 Only active audit is exposed. Add a tool that runs Burp's passive checks against
 a supplied request/response (or a proxy-history item id) via
 `api.scanner()` passive audit config. ROE-guarded like the active scan.
 
-### 2.3 Structured tool output  [ ]
+### 2.3 Structured tool output  [~]
 Roadmap item "Structured JSON tool outputs" is still open. `tools/call`
 currently returns only `content: [{type:text}]`. Add optional
 `structuredContent` (MCP 2025-06) for the high-value readers (`scan_status`,

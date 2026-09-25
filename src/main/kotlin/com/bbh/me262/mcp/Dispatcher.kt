@@ -52,24 +52,26 @@ class Dispatcher(
             ?: return err(req.id, -32602, "missing tool name")
         val args = params["arguments"] as? JsonObject ?: JsonObject(emptyMap())
         val tool = registry.get(name) ?: return err(req.id, -32602, "unknown tool: $name")
-        return runCatching { tool.execute(args) }.fold(
-            onSuccess = { text -> toolResult(req.id, text, isError = false) },
+        return runCatching { tool.run(args) }.fold(
+            onSuccess = { out -> toolResult(req.id, out.text, out.structured, isError = false) },
             onFailure = { t ->
                 logError("tool '$name' failed: ${t.message}")
-                toolResult(req.id, "ERROR: ${t.message}", isError = true)
+                toolResult(req.id, "ERROR: ${t.message}", null, isError = true)
             },
         )
     }
 
-    private fun toolResult(id: JsonElement?, text: String, isError: Boolean) = ok(id, buildJsonObject {
-        putJsonArray("content") {
-            add(buildJsonObject {
-                put("type", "text")
-                put("text", text)
-            })
-        }
-        put("isError", isError)
-    })
+    private fun toolResult(id: JsonElement?, text: String, structured: JsonElement?, isError: Boolean) =
+        ok(id, buildJsonObject {
+            putJsonArray("content") {
+                add(buildJsonObject {
+                    put("type", "text")
+                    put("text", text)
+                })
+            }
+            if (structured != null) put("structuredContent", structured)
+            put("isError", isError)
+        })
 
     private fun ok(id: JsonElement?, result: JsonElement) = JsonRpcResponse(id = id, result = result)
     private fun err(id: JsonElement?, code: Int, message: String) =

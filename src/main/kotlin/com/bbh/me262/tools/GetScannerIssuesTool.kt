@@ -1,16 +1,20 @@
 package com.bbh.me262.tools
 
 import burp.api.montoya.MontoyaApi
+import burp.api.montoya.scanner.audit.issues.AuditIssue
 import com.bbh.me262.mcp.Tool
+import com.bbh.me262.mcp.ToolOutput
 import com.bbh.me262.scan.Issues
 import com.bbh.me262.scan.ScanRegistry
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.add
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
 /** Read Scanner audit issues, from a specific scan or the whole site map. PRO. */
@@ -35,30 +39,60 @@ class GetScannerIssuesTool(
         }
     }
 
-    override fun execute(arguments: JsonObject): String {
+    private data class Selection(val source: String, val issues: List<AuditIssue>, val withDetail: Boolean)
+
+    private fun select(arguments: JsonObject): Selection {
         val scanId = arguments["scan_id"]?.jsonPrimitive?.contentOrNull
         val minSev = Issues.parseMinSeverity(arguments["min_severity"]?.jsonPrimitive?.contentOrNull)
         val contains = arguments["contains"]?.jsonPrimitive?.contentOrNull
         val limit = arguments["limit"]?.jsonPrimitive?.intOrNull ?: 100
         val withDetail = arguments["detail"]?.jsonPrimitive?.booleanOrNull ?: false
 
-        val issues = if (scanId != null) {
+        val all = if (scanId != null) {
             scans.audit(scanId)?.issues() ?: error("unknown scan id: $scanId")
         } else {
             api.siteMap().issues()
         }
+        val picked = all.asSequence()
+            .sortedByDescending { Issues.rank(it.severity()) }
+            .filter { Issues.rank(it.severity()) >= minSev }
+            .filter { contains == null || it.baseUrl().contains(contains) }
+            .take(limit)
+            .toList()
+        return Selection(scanId ?: "site map", picked, withDetail)
+    }
 
-        val sb = StringBuilder()
-        var n = 0
-        for (issue in issues.sortedByDescending { Issues.rank(it.severity()) }) {
-            if (Issues.rank(issue.severity()) < minSev) continue
-            if (contains != null && !issue.baseUrl().contains(contains)) continue
-            sb.append("- ").append(Issues.line(issue))
-            if (withDetail) sb.append(Issues.detail(issue))
-            sb.append('\n')
-            if (++n >= limit) break
+    override fun execute(arguments: JsonObject): String = format(select(arguments))
+
+    override fun run(arguments: JsonObject): ToolOutput {
+        val sel = select(arguments)
+        val structured = buildJsonObject {
+            put("source", sel.source)
+            put("count", sel.issues.size)
+            putJsonArray("issues") {
+                for (issue in sel.issues) add(buildJsonObject {
+                    put("name", issue.name())
+                    put("severity", issue.severity().name)
+                    put("confidence", issue.confidence().name)
+                    put("url", issue.baseUrl())
+                    if (sel.withDetail) {
+                        runCatching { issue.detail() }.getOrNull()?.takeIf { it.isNotBlank() }
+                            ?.let { put("detail", it.take(1500)) }
+                    }
+                })
+            }
         }
-        val src = scanId ?: "site map"
-        return if (n == 0) "No issues in $src (matching filters)." else "Issues from $src ($n shown):\n$sb"
+        return ToolOutput(format(sel), structured)
+    }
+
+    private fun format(sel: Selection): String {
+        if (sel.issues.isEmpty()) return "No issues in ${sel.source} (matching filters)."
+        val sb = StringBuilder()
+        for (issue in sel.issues) {
+            sb.append("- ").append(Issues.line(issue))
+            if (sel.withDetail) sb.append(Issues.detail(issue))
+            sb.append('\n')
+        }
+        return "Issues from ${sel.source} (${sel.issues.size} shown):\n$sb"
     }
 }

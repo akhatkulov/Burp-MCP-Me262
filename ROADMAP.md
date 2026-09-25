@@ -15,6 +15,7 @@ Legend: [x] done  [~] partial  [ ] planned
 - [x] `generate_report` — HTML/XML via Scanner.generateReport
 - [x] Track Audit/Crawl handles in a scan registry (ScanRegistry) so issues map to a scan id
 - [x] `stop_scan` — cancel + drop a running audit/crawl (ScanTask.delete())
+- [x] `passive_scan` — passive audit (LEGACY_PASSIVE_AUDIT_CHECKS)
 
 ## v0.3 — native fuzzer (Intruder replacement) — done
 - [x] `fuzz` — sniper/clusterbomb/pitchfork over Burp HTTP, payload list/wordlist,
@@ -30,7 +31,7 @@ Legend: [x] done  [~] partial  [ ] planned
 
 ## v0.6 — send-to, utilities, config (done)
 - [x] `send_to_repeater`, `send_to_intruder`, `send_to_organizer`
-- [x] `transform` (url/base64/html encode+decode), `random_string`
+- [x] `transform` (url/base64/base64url/hex/html/jwt_decode), `random_string`
 - [x] `export_burp_config` / `import_burp_config` (gated by -Dme262.allowConfigEdits)
 
 ## v0.7 — niche read/compare (done)
@@ -40,9 +41,9 @@ Legend: [x] done  [~] partial  [ ] planned
 ## Hardening / ops
 - [x] Suite status tab (endpoint + tool list)  [ ] interactive toggles
 - [x] Optional bearer token on the MCP endpoint (-Dme262.token)
-- [ ] Structured JSON tool outputs (not just text) where useful
+- [~] Structured JSON tool outputs — `structuredContent` on scan_status + get_scanner_issues (opt-in Tool.run())
 - [x] ROE guard on active tools (Burp scope; -Dme262.allowOutOfScope override)
-- [x] Unit + integration tests: combinatorics, registry, dispatch, live SSE transport (13)
+- [x] Unit + integration tests: combinatorics, registry, dispatch, live SSE transport, transform codecs, structured output (21)
 
 ## Known API ceilings (cannot fix in MCP)
 - No cross-extension invocation / enumeration in Montoya.

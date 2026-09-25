@@ -1,8 +1,18 @@
 # Changelog
 
 ## Unreleased
+### Group 2 — read/compare + structured output
+- Add `passive_scan` — Burp Pro passive audit (no active payloads) returning a
+  scan id, read via `scan_status`/`get_scanner_issues`. Now 28 tools.
+- Extend `transform` with `url_encode_all`, `base64url_encode/decode`,
+  `hex_encode/decode`, and `jwt_decode` (header+payload, no signature check).
+- Structured tool output: `tools/call` now includes MCP `structuredContent`
+  alongside the text block for `scan_status` and `get_scanner_issues`. Opt-in
+  via `Tool.run()` (default stays text-only), so existing tools are unchanged.
+
+### Group 1 — quick wins
 - Add `stop_scan` — cancel and drop an audit/crawl started via Me262
-  (`ScanTask.delete()`); registry gains `remove(id)`. Now 27 tools.
+  (`ScanTask.delete()`); registry gains `remove(id)`.
 - Fix `fuzz`: recompute `Content-Length` after payload substitution so
   body-fuzzing sends a correct length (new `update_content_length` arg, default
   true; set false for desync tests).

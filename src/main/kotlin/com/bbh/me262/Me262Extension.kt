@@ -32,6 +32,7 @@ import com.bbh.me262.tools.ScopeRemoveTool
 import com.bbh.me262.tools.SendHttpRequestTool
 import com.bbh.me262.tools.SetInterceptTool
 import com.bbh.me262.tools.SitemapQueryTool
+import com.bbh.me262.tools.PassiveScanTool
 import com.bbh.me262.tools.StartActiveScanTool
 import com.bbh.me262.tools.StartCrawlTool
 import com.bbh.me262.tools.StopScanTool
@@ -71,6 +72,7 @@ class Me262Extension : BurpExtension {
             .register(FuzzTool(api, roe))
             // v0.2 scanner loop (active ones ROE-guarded)
             .register(StartActiveScanTool(api, scans, roe))
+            .register(PassiveScanTool(api, scans, roe))
             .register(StartCrawlTool(api, scans, roe))
             .register(ScanStatusTool(scans))
             .register(StopScanTool(scans))
