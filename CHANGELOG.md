@@ -25,6 +25,14 @@
   handle so Community edition (or any setup without the Scanner) returns one
   clear "requires Burp Suite Professional" message instead of a bare
   `"audit" is null` NPE. Now 30 tools.
+- `start_active_scan` can audit a specific request, not just a bare-GET URL:
+  pass `raw`+host/port/tls (with the shared builder's headers/cookies/body) or
+  an `index` from `get_proxy_history`. This is how installed scan-check
+  extensions (Active Scan++, HTTP Request Smuggler, BChecks, …) run against the
+  real request — Burp derives insertion points automatically. Note: Burp
+  isolates extensions, so there is no Montoya API to invoke another extension's
+  menu/buttons directly; participating via the audit is the supported path, and
+  their findings already surface through `get_scanner_issues` (site-map issues).
 - `send_to_intruder` can pre-mark payload positions: wrap each position in a
   `marker` (default `§`), e.g. `id=§1§`, and the request is staged in Intruder
   with those insertion points set. Montoya has no API to pick the attack type,
