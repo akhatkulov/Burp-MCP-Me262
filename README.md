@@ -21,20 +21,28 @@ dual-stack: modern **Streamable HTTP** (`2025-06-18`) and legacy **HTTP+SSE**
 ## Why Me262
 
 The stock Burp MCP can send requests and read history — but it stops there. Me262
-unlocks the Pro engine and adds the discipline you actually need on a live target.
+unlocks the Pro engine and adds the discipline you actually need on a live target:
+authenticated requests that just work (cookie jar / file, correct Content-Length),
+batch sends for IDOR, rich history/site-map filtering, and audits you can point at
+a specific crafted request so installed scan-check extensions do the heavy lifting.
 
 | Capability | Stock Burp MCP | **Me262** |
 |---|:---:|:---:|
 | Send HTTP/1.1 & /2, read Proxy history | ✅ | ✅ |
+| **Authenticated requests** — cookie jar / cookie file, auto Content-Length | partial | ✅ |
+| **Batch send** for IDOR / access-control | ❌ | ✅ |
+| **Filter history & site map** — regex, status, MIME, length | ❌ | ✅ |
+| **Full request + response** by history index | partial | ✅ |
 | Collaborator payloads + interactions | ✅ | ✅ |
 | **Launch active scan / crawl** | ❌ | ✅ |
+| **Audit a specific request** (raw / history entry) so installed extensions run on it | ❌ | ✅ |
 | **Read scanner issues + generate report** | ❌ | ✅ |
 | **Native fuzzer** (sniper/clusterbomb/pitchfork) | ❌ | ✅ |
 | **BCheck import**, task-engine, intercept control | ❌ | ✅ |
 | Scope / site map / send-to (Repeater/Intruder/Comparer) | partial | ✅ |
 | **ROE guard** — refuses out-of-scope targets | ❌ | ✅ |
 | Bearer-token auth on the endpoint | ❌ | ✅ |
-| Unit + live-transport tests | ❌ | ✅ 23 |
+| Unit + live-transport tests | ❌ | ✅ 47 |
 
 ## Quickstart
 
@@ -101,7 +109,7 @@ starts a scan or sends traffic. See **[docs/EXTENSION-COMPAT.md](docs/EXTENSION-
 ## Build & test
 
 ```bash
-./gradlew test        # 23 tests: combinatorics, registry, dispatch, transform codecs, live SSE + Streamable HTTP transport
+./gradlew test        # 47 tests: combinatorics, registry, dispatch, transform codecs, request building, history/site-map filters, Intruder markers, live SSE + Streamable HTTP transport
 ./gradlew shadowJar   # the loadable fat jar
 ```
 
