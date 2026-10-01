@@ -112,6 +112,9 @@ starts a scan or sends traffic. See **[docs/EXTENSION-COMPAT.md](docs/EXTENSION-
 ./gradlew test        # 47 tests: combinatorics, registry, dispatch, transform codecs, request building, history/site-map filters, Intruder markers, live SSE + Streamable HTTP transport
 ./gradlew shadowJar   # the loadable fat jar
 ```
+<a href="https://github.com/akhatkulov/Burp-MCP-Me262/graphs/contributors">
+  <img src="https://contrib.rocks/image?&columns=25&max=10000&&repo=akhatkulov/Burp-MCP-Me262" alt="contributors"/>
+</a>
 
 ## License
 
