@@ -39,6 +39,9 @@
   load a payload list, or launch the attack, so automated attacks with results
   stay in `fuzz` — the tool says so. It also inherits the shared builder's
   method/path/headers/cookies/cookie_file/use_cookie_jar/body fields.
+- Tests: +24 unit tests (23 -> 47) covering the request builder (CRLF
+  normalisation, cookie/header parsing), the shared history/site-map filters,
+  and Intruder marker parsing (byte-offset insertion points).
 
 ### Group 3 — transport modernisation
 - Streamable HTTP transport (`2025-06-18`): a single `POST /` returns the
