@@ -112,9 +112,7 @@ starts a scan or sends traffic. See **[docs/EXTENSION-COMPAT.md](docs/EXTENSION-
 ./gradlew test        # 47 tests: combinatorics, registry, dispatch, transform codecs, request building, history/site-map filters, Intruder markers, live SSE + Streamable HTTP transport
 ./gradlew shadowJar   # the loadable fat jar
 ```
-<a href="https://github.com/akhatkulov/Burp-MCP-Me262/graphs/contributors">
-  <img src="https://contrib.rocks/image?&columns=25&max=10000&&repo=akhatkulov/Burp-MCP-Me262" alt="contributors"/>
-</a>
+
 
 ## License
 
@@ -127,3 +125,9 @@ MIT — see [LICENSE](LICENSE). Uses the Burp Montoya API `compileOnly`
 Issues and PRs welcome — new tools are one Kotlin file plus one `register(...)`
 line (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)). If Me262 saves you time
 on an engagement, a ⭐ helps others find it.
+
+## Contributors
+
+<a href="https://github.com/akhatkulov/Burp-MCP-Me262/graphs/contributors">
+  <img src="https://contrib.rocks/image?&columns=25&max=10000&&repo=akhatkulov/Burp-MCP-Me262" alt="contributors"/>
+</a>
