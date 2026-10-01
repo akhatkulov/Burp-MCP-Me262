@@ -7,6 +7,7 @@ import burp.api.montoya.scanner.BuiltInAuditConfiguration
 import com.bbh.me262.mcp.Tool
 import com.bbh.me262.safety.RoeGuard
 import com.bbh.me262.scan.ScanRegistry
+import com.bbh.me262.scan.Scans
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
@@ -47,7 +48,7 @@ class StartActiveScanTool(
         val config = AuditConfiguration.auditConfiguration(
             BuiltInAuditConfiguration.LEGACY_ACTIVE_AUDIT_CHECKS,
         )
-        val audit = api.scanner().startAudit(config)
+        val audit = Scans.startAudit(api, config)
         audit.addRequest(HttpRequest.httpRequestFromUrl(url))
         val id = scans.addAudit(audit)
         return "Active audit started for $url -> scan id: $id\nUse scan_status(scan_id=$id) and get_scanner_issues(scan_id=$id)."

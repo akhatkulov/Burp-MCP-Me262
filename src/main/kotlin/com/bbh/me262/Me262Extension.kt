@@ -22,6 +22,7 @@ import com.bbh.me262.tools.SendToRepeaterTool
 import com.bbh.me262.tools.SetTaskEngineTool
 import com.bbh.me262.tools.TransformTool
 import com.bbh.me262.tools.GenerateReportTool
+import com.bbh.me262.tools.GetProxyEntryTool
 import com.bbh.me262.tools.GetProxyHistoryTool
 import com.bbh.me262.tools.GetScannerIssuesTool
 import com.bbh.me262.tools.ImportBCheckTool
@@ -30,6 +31,7 @@ import com.bbh.me262.tools.ScopeAddTool
 import com.bbh.me262.tools.ScopeCheckTool
 import com.bbh.me262.tools.ScopeRemoveTool
 import com.bbh.me262.tools.SendHttpRequestTool
+import com.bbh.me262.tools.SendHttpRequestsTool
 import com.bbh.me262.tools.SetInterceptTool
 import com.bbh.me262.tools.SitemapQueryTool
 import com.bbh.me262.tools.PassiveScanTool
@@ -67,7 +69,9 @@ class Me262Extension : BurpExtension {
         val registry = ToolRegistry()
             // v0.1 core
             .register(SendHttpRequestTool(api))
+            .register(SendHttpRequestsTool(api))
             .register(GetProxyHistoryTool(api))
+            .register(GetProxyEntryTool(api))
             // v0.3 native fuzzer (ROE-guarded)
             .register(FuzzTool(api, roe))
             // v0.2 scanner loop (active ones ROE-guarded)

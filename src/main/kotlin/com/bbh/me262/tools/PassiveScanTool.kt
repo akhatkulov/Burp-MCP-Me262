@@ -7,6 +7,7 @@ import burp.api.montoya.scanner.BuiltInAuditConfiguration
 import com.bbh.me262.mcp.Tool
 import com.bbh.me262.safety.RoeGuard
 import com.bbh.me262.scan.ScanRegistry
+import com.bbh.me262.scan.Scans
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
@@ -50,7 +51,7 @@ class PassiveScanTool(
         val config = AuditConfiguration.auditConfiguration(
             BuiltInAuditConfiguration.LEGACY_PASSIVE_AUDIT_CHECKS,
         )
-        val audit = api.scanner().startAudit(config)
+        val audit = Scans.startAudit(api, config)
         audit.addRequest(HttpRequest.httpRequestFromUrl(url))
         val id = scans.addAudit(audit)
         return "Passive audit started for $url -> scan id: $id\n" +

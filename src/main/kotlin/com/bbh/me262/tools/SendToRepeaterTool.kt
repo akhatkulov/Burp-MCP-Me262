@@ -28,7 +28,7 @@ class SendToRepeaterTool(private val api: MontoyaApi) : Tool {
     }
 
     override fun execute(arguments: JsonObject): String {
-        val request = Requests.build(arguments)
+        val request = Requests.build(arguments, api)
         val tab = arguments["tab"]?.jsonPrimitive?.contentOrNull
         if (tab != null) api.repeater().sendToRepeater(request, tab) else api.repeater().sendToRepeater(request)
         return "Sent to Repeater${if (tab != null) " (tab: $tab)" else ""}: ${request.method()} ${request.url()}"

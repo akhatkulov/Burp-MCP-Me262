@@ -1,6 +1,37 @@
 # Changelog
 
 ## Unreleased
+### Group 4 — authenticated requests, richer queries, batch
+- Fix the main footgun behind empty "HTTP 0 / no response" replies:
+  `send_http_request` now normalises lone `LF` line endings in `raw` to `CRLF`
+  and recomputes `Content-Length` to match the body, so long session cookies and
+  edited bodies go through cleanly. New structured fields avoid hand-crafting raw
+  entirely — `method`, `path`, `headers` (array of `"Name: Value"` or object),
+  `cookies` (`"a=b; c=d"` or object), `cookie_file` (path), `use_cookie_jar`
+  (merge Burp's cookie jar for the host), `body`, `max_body`. A null response now
+  reports status 0 with bytes-sent instead of a bare message. The same builder
+  backs `send_to_repeater` / `send_to_intruder`, so they gain the fields too.
+- Add `send_http_requests` — batch send through Burp's pipelined `sendRequests`,
+  returning a status/length table; ideal for IDOR/access-control (same request,
+  different session cookies). Optional `match`, `include_body`.
+- Add `get_proxy_entry` — return the full request/response bytes for a Proxy
+  history entry by `#index` (companion to `get_proxy_history`, which stays
+  metadata-only). `max_body`, `request_only`/`response_only`.
+- Extend `get_proxy_history` and `sitemap_query` filtering beyond `contains`:
+  `regex` (URL), `method`, `status` (int or array), `mime_type`,
+  `min_length`/`max_length` (response body bytes). `get_proxy_history` prints a
+  stable `#index` and an optional `include_body` preview.
+- Fix `start_active_scan` / `passive_scan` / `start_crawl`: guard the Scanner
+  handle so Community edition (or any setup without the Scanner) returns one
+  clear "requires Burp Suite Professional" message instead of a bare
+  `"audit" is null` NPE. Now 30 tools.
+- `send_to_intruder` can pre-mark payload positions: wrap each position in a
+  `marker` (default `§`), e.g. `id=§1§`, and the request is staged in Intruder
+  with those insertion points set. Montoya has no API to pick the attack type,
+  load a payload list, or launch the attack, so automated attacks with results
+  stay in `fuzz` — the tool says so. It also inherits the shared builder's
+  method/path/headers/cookies/cookie_file/use_cookie_jar/body fields.
+
 ### Group 3 — transport modernisation
 - Streamable HTTP transport (`2025-06-18`): a single `POST /` returns the
   JSON-RPC reply directly (`application/json`, or one-shot SSE when the client
