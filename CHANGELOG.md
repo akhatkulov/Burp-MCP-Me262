@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.1.1 — 2026-10-03
+### Scope guard hardening
+- `send_http_request` and `send_http_requests` are now ROE-guarded: targets
+  outside Burp's Target scope are refused (batch rows are marked `(refused)`
+  and never sent). Previously only fuzz/scan/crawl were guarded.
+- Fix `fuzz` scope check: it validated only `scheme://host/`, dropping port and
+  path, so port- or path-restricted scope rules were misjudged. It now checks
+  the full URL of every generated request (a payload can land in the path) and
+  refuses the whole run — sending nothing — if any falls outside scope.
+- `send_http_request` gains `follow_redirects` (default false). When set, Burp
+  follows only hops that stay in scope (`RedirectionMode.IN_SCOPE`); the 3xx is
+  returned as-is when the next hop would leave it. Default behaviour is
+  unchanged: redirects are never followed automatically.
+- `start_crawl` description now states that only the seed is checked by Me262;
+  discovered links follow Burp's crawl settings.
+- Tests: +7 `RoeGuard` tests (47 -> 54).
+
 ## 1.1.0 — 2026-10-03
 ### Group 4 — authenticated requests, richer queries, batch
 - Fix the main footgun behind empty "HTTP 0 / no response" replies:

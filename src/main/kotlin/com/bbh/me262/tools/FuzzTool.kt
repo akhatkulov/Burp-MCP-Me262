@@ -33,7 +33,9 @@ import java.util.concurrent.TimeUnit
  *   clusterbomb  markers FUZZ1..FUZZn, one payload set each, cartesian product.
  *   pitchfork    markers FUZZ1..FUZZn, payload sets iterated in parallel (zip).
  *
- * Sends MANY requests — only against authorised targets (ROE-guarded by scope).
+ * Sends MANY requests — only against authorised targets. Every generated request
+ * is checked against Burp's Target scope by its full URL (port and path included,
+ * since a payload can land in the path) before anything is sent.
  */
 class FuzzTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
     override val name = "fuzz"
@@ -86,7 +88,6 @@ class FuzzTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
         val host = arguments["host"]?.jsonPrimitive?.contentOrNull ?: error("'host' is required")
         val port = arguments["port"]?.jsonPrimitive?.intOrNull ?: error("'port' is required")
         val tls = arguments["tls"]?.jsonPrimitive?.booleanOrNull ?: (port == 443)
-        roe.requireInScope("${if (tls) "https" else "http"}://$host/")
         val template = arguments["template"]?.jsonPrimitive?.contentOrNull ?: error("'template' is required")
         val mode = arguments["mode"]?.jsonPrimitive?.contentOrNull?.lowercase() ?: "sniper"
 
@@ -101,12 +102,22 @@ class FuzzTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
         // Resolve markers + combinations per mode.
         val (markers, combos) = buildCombos(arguments, template, mode, max)
         require(combos.isNotEmpty()) { "no payloads produced" }
+        val raws = combos.map { substitute(template, markers, it) }
+        val refused = raws.map { RoeGuard.targetUrl(tls, host, port, it) }.distinct().filterNot { roe.isAllowed(it) }
+        if (refused.isNotEmpty()) {
+            error(
+                "REFUSED by ROE guard: ${refused.size} target URL(s) are not in Burp's Target scope " +
+                "(e.g. ${refused.take(3).joinToString()}). Nothing was sent. Add them to scope, or start Burp " +
+                "with -Dme262.allowOutOfScope=true to override.",
+            )
+        }
 
         val service = HttpService.httpService(host, port, tls)
         val pool = Executors.newFixedThreadPool(concurrency)
         val results = try {
-            combos.map { combo ->
-                pool.submit(Callable { runOne(service, template, markers, combo, match, extractRe, updateContentLength) })
+            combos.zip(raws).map { (combo, raw) ->
+                val label = combo.joinToString(" | ")
+                pool.submit(Callable { runOne(service, raw, label, match, extractRe, updateContentLength) })
             }.map { f ->
                 runCatching { f.get(60, TimeUnit.SECONDS) }
                     .getOrElse { Result("?", -1, 0, 0, null, false, it.message ?: "timeout") }
@@ -171,18 +182,20 @@ class FuzzTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
         }
     }
 
+    private fun substitute(template: String, markers: List<String>, combo: List<String>): String {
+        var raw = template
+        for ((i, marker) in markers.withIndex()) raw = raw.replace(marker, combo[i])
+        return raw
+    }
+
     private fun runOne(
         service: HttpService,
-        template: String,
-        markers: List<String>,
-        combo: List<String>,
+        raw: String,
+        label: String,
         match: String?,
         extractRe: Regex?,
         updateContentLength: Boolean,
     ): Result {
-        var raw = template
-        for ((i, marker) in markers.withIndex()) raw = raw.replace(marker, combo[i])
-        val label = combo.joinToString(" | ")
         // Building from raw keeps whatever Content-Length the template had. When a
         // payload changed the body length, re-setting the body forces Montoya to
         // recompute a correct Content-Length (unless the caller opted out).

@@ -24,7 +24,8 @@ class StartCrawlTool(
     override val name = "start_crawl"
     override val description =
         "Start a Burp crawl from a seed URL to discover content. Returns a scan id; " +
-        "poll with scan_status. PRO ONLY."
+        "poll with scan_status. The seed must be in Burp's Target scope; links found during the crawl " +
+        "are followed by Burp's crawler under its own crawl settings, not re-checked by Me262. PRO ONLY."
 
     override val inputSchema = buildJsonObject {
         put("type", "object")

@@ -42,7 +42,7 @@ Legend: [x] done  [~] partial  [ ] planned
 - [x] Suite status tab (endpoint + tool list)  [ ] interactive toggles
 - [x] Optional bearer token on the MCP endpoint (-Dme262.token)
 - [~] Structured JSON tool outputs — `structuredContent` on scan_status + get_scanner_issues (opt-in Tool.run())
-- [x] ROE guard on active tools (Burp scope; -Dme262.allowOutOfScope override)
+- [x] ROE guard on every traffic-sending tool, full-URL checks, in-scope-only redirects (Burp scope; -Dme262.allowOutOfScope override)
 - [x] Unit + integration tests: combinatorics, registry, dispatch, live SSE transport, transform codecs, structured output, Streamable HTTP (23)
 
 ## Transport (Group 3)

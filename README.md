@@ -42,7 +42,7 @@ a specific crafted request so installed scan-check extensions do the heavy lifti
 | Scope / site map / send-to (Repeater/Intruder/Comparer) | partial | ✅ |
 | **ROE guard** — refuses out-of-scope targets | ❌ | ✅ |
 | Bearer-token auth on the endpoint | ❌ | ✅ |
-| Unit + live-transport tests | ❌ | ✅ 47 |
+| Unit + live-transport tests | ❌ | ✅ 54 |
 
 ## Quickstart
 
@@ -83,8 +83,15 @@ see **[docs/CONNECTING.md](docs/CONNECTING.md)**.
 ## Safety
 
 - Binds to `127.0.0.1` only; rejects non-loopback `Origin` (DNS-rebinding defence).
-- **ROE guard**: `fuzz`, `start_active_scan`, `start_crawl` refuse targets not in
-  Burp's Target scope. Override for lab work with `-Dme262.allowOutOfScope=true`.
+- **ROE guard**: every tool that sends traffic — `send_http_request`,
+  `send_http_requests`, `fuzz`, `start_active_scan`, `passive_scan`,
+  `start_crawl` — refuses targets not in Burp's Target scope. Checks use the
+  full URL (port and path included); `fuzz` checks every generated request
+  before sending any. Override for lab work with `-Dme262.allowOutOfScope=true`.
+- **Redirects** are not followed by default — the 3xx comes back to the agent
+  as-is. `send_http_request` with `follow_redirects` follows only hops that stay
+  in scope (Burp's `IN_SCOPE` redirection mode). A crawl's seed is checked; links
+  it discovers are followed under Burp's own crawl settings.
 - Optional token: start Burp with `-Dme262.token=SECRET`.
 - `import_burp_config` is disabled unless `-Dme262.allowConfigEdits=true`.
 - This is a testing tool — only point it at systems you are authorised to test.
@@ -109,7 +116,7 @@ starts a scan or sends traffic. See **[docs/EXTENSION-COMPAT.md](docs/EXTENSION-
 ## Build & test
 
 ```bash
-./gradlew test        # 47 tests: combinatorics, registry, dispatch, transform codecs, request building, history/site-map filters, Intruder markers, live SSE + Streamable HTTP transport
+./gradlew test        # 54 tests: ROE guard, combinatorics, registry, dispatch, transform codecs, request building, history/site-map filters, Intruder markers, live SSE + Streamable HTTP transport
 ./gradlew shadowJar   # the loadable fat jar
 ```
 

@@ -3,6 +3,7 @@ package com.bbh.me262.tools
 import burp.api.montoya.MontoyaApi
 import burp.api.montoya.http.message.requests.HttpRequest
 import com.bbh.me262.mcp.Tool
+import com.bbh.me262.safety.RoeGuard
 import com.bbh.me262.util.Requests
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -21,15 +22,17 @@ import kotlinx.serialization.json.putJsonObject
  * this is the quick way to compare responses side by side — e.g. replay the same
  * request as two different users for IDOR/access-control testing, where the tell
  * is "same status, same length" across identities that should differ.
+ * Rows whose target is outside Burp's Target scope are refused and never sent.
  */
-class SendHttpRequestsTool(private val api: MontoyaApi) : Tool {
+class SendHttpRequestsTool(private val api: MontoyaApi, private val roe: RoeGuard) : Tool {
     override val name = "send_http_requests"
     override val description =
         "Send a batch of HTTP requests through Burp and return a compact status/length table. " +
         "'requests' is an array; each item takes the same fields as send_http_request " +
         "(url OR raw+host/port/tls, plus method/path/headers/cookies/cookie_file/use_cookie_jar/body). " +
         "Optional 'match' substring is flagged per response, 'include_body' returns a short body preview. " +
-        "Ideal for IDOR/access-control: same request, different session cookies."
+        "Ideal for IDOR/access-control: same request, different session cookies. " +
+        "Rows targeting anything outside Burp's Target scope are refused (not sent); redirects are not followed."
 
     override val inputSchema = buildJsonObject {
         put("type", "object")
@@ -53,7 +56,13 @@ class SendHttpRequestsTool(private val api: MontoyaApi) : Tool {
         val match = arguments["match"]?.jsonPrimitive?.contentOrNull
         val includeBody = arguments["include_body"]?.jsonPrimitive?.booleanOrNull ?: false
 
-        val built = specs.map { runCatching { Requests.build(it, api) } }
+        val built = specs.map { spec ->
+            runCatching {
+                Requests.build(spec, api).also { req ->
+                    require(roe.isAllowed(req.url())) { "REFUSED by ROE guard: ${req.url()} is not in Burp's Target scope" }
+                }
+            }
+        }
         val requests: List<HttpRequest> = built.mapNotNull { it.getOrNull() }
         val responses = if (requests.isNotEmpty()) api.http().sendRequests(requests) else emptyList()
 
@@ -62,7 +71,9 @@ class SendHttpRequestsTool(private val api: MontoyaApi) : Tool {
         var respIdx = 0
         for ((i, b) in built.withIndex()) {
             if (b.isFailure) {
-                sb.append("$i | (build failed) | ${b.exceptionOrNull()?.message?.take(80)}\n")
+                val msg = b.exceptionOrNull()?.message.orEmpty()
+                val kind = if (msg.startsWith("REFUSED")) "(refused)" else "(build failed)"
+                sb.append("$i | $kind | ${msg.take(120)}\n")
                 continue
             }
             val rr = responses.getOrNull(respIdx++)
