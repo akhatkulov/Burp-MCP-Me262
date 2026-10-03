@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 — 2026-10-03
 ### Group 4 — authenticated requests, richer queries, batch
 - Fix the main footgun behind empty "HTTP 0 / no response" replies:
   `send_http_request` now normalises lone `LF` line endings in `raw` to `CRLF`

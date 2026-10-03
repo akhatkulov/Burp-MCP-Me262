@@ -55,7 +55,7 @@ class Me262Extension : BurpExtension {
     override fun initialize(api: MontoyaApi) {
         api.extension().setName("Burp-MCP-Me262")
         val log = api.logging()
-        log.logToOutput("Burp-MCP-Me262 v1.0.2 loading...")
+        log.logToOutput("Burp-MCP-Me262 v1.1.0 loading...")
 
         val host = System.getProperty("me262.host") ?: "127.0.0.1"
         val port = (System.getProperty("me262.port") ?: "9262").toIntOrNull() ?: 9262
@@ -105,7 +105,7 @@ class Me262Extension : BurpExtension {
             .register(GetWebsocketHistoryTool(api))
             .register(SendToComparerTool(api))
 
-        val mcp = McpServer(host, port, registry, log, serverVersion = "1.0.2", authToken = token)
+        val mcp = McpServer(host, port, registry, log, serverVersion = "1.1.0", authToken = token)
         mcp.start()
         server = mcp
 
