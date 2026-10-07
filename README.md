@@ -9,6 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](build.gradle.kts)
 [![Stars](https://img.shields.io/github/stars/akhatkulov/Burp-MCP-Me262?style=social)](https://github.com/akhatkulov/Burp-MCP-Me262/stargazers)
+[![M8ven Score](https://m8ven.ai/badge/mcp/akhatkulov/burp-mcp-me262)](https://m8ven.ai/mcp/akhatkulov/burp-mcp-me262?s=readme) 
 
 Me262 is a native **Montoya-API** extension that runs an **MCP server inside Burp
 Suite Pro**, exposing **30 tools** to Claude Code, Cursor, Cline, Windsurf,
