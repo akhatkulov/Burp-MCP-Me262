@@ -18,13 +18,15 @@ class GetProxyHistoryTool(private val api: MontoyaApi) : Tool {
         "Return Proxy HTTP history (newest first) as '#index method url -> status (len)'. " +
         "Filters: 'contains' (URL substring), 'regex' (URL), 'method', 'status' (int or array), " +
         "'mime_type' (e.g. JSON, HTML), 'min_length'/'max_length' (response body bytes). " +
-        "'limit' (default 50). 'include_body' adds a short preview. Use the '#index' with " +
+        "'limit' caps the number of rows; omit it (or 0) to return ALL matching entries — " +
+        "prefer a filter when the history is large, or the output gets huge. " +
+        "'include_body' adds a short preview. Use the '#index' with " +
         "get_proxy_entry to pull the full request/response."
 
     override val inputSchema = buildJsonObject {
         put("type", "object")
         putJsonObject("properties") {
-            putJsonObject("limit") { put("type", "integer"); put("description", "max entries, default 50") }
+            putJsonObject("limit") { put("type", "integer"); put("description", "max entries; omit or 0 = all matching entries") }
             putJsonObject("contains") { put("type", "string"); put("description", "only URLs containing this substring") }
             putJsonObject("regex") { put("type", "string"); put("description", "only URLs matching this regex") }
             putJsonObject("method") { put("type", "string"); put("description", "only this HTTP method") }
@@ -37,7 +39,8 @@ class GetProxyHistoryTool(private val api: MontoyaApi) : Tool {
     }
 
     override fun execute(arguments: JsonObject): String {
-        val limit = arguments["limit"]?.jsonPrimitive?.intOrNull ?: 50
+        // No 'limit' (or <= 0) means "return everything that matches"; filters do the narrowing.
+        val limit = arguments["limit"]?.jsonPrimitive?.intOrNull?.takeIf { it > 0 } ?: Int.MAX_VALUE
         val includeBody = arguments["include_body"]?.jsonPrimitive?.booleanOrNull ?: false
         val filters = HistoryFilters.from(arguments)
 

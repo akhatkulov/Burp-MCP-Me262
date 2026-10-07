@@ -16,7 +16,7 @@ class SitemapQueryTool(private val api: MontoyaApi) : Tool {
     override val description =
         "List entries from Burp's site map as 'method url -> status (len)'. Filters: 'contains' (URL substring), " +
         "'regex' (URL), 'method', 'status' (int or array), 'mime_type' (e.g. JSON, HTML), " +
-        "'min_length'/'max_length' (response body bytes). 'limit' (default 100)."
+        "'min_length'/'max_length' (response body bytes). 'limit' caps rows; omit it (or 0) for ALL matching entries."
 
     override val inputSchema = buildJsonObject {
         put("type", "object")
@@ -33,7 +33,8 @@ class SitemapQueryTool(private val api: MontoyaApi) : Tool {
     }
 
     override fun execute(arguments: JsonObject): String {
-        val limit = arguments["limit"]?.jsonPrimitive?.intOrNull ?: 100
+        // No 'limit' (or <= 0) means "return everything that matches"; filters do the narrowing.
+        val limit = arguments["limit"]?.jsonPrimitive?.intOrNull?.takeIf { it > 0 } ?: Int.MAX_VALUE
         val filters = HistoryFilters.from(arguments)
         val sb = StringBuilder()
         var n = 0

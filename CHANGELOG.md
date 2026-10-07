@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.2 — 2026-10-07
+### Unbounded history/site-map queries
+- `get_proxy_history` and `sitemap_query` no longer impose a default row cap
+  (previously 50 and 100). Omit `limit` (or pass `0`) to return every matching
+  entry; pass a positive `limit` to cap as before. Filters
+  (`contains`/`regex`/`method`/`status`/`mime_type`/`min_length`/`max_length`)
+  remain the recommended way to narrow a large history — an unfiltered dump of a
+  big history produces very large output.
+
 ## 1.1.1 — 2026-10-03
 ### Scope guard hardening
 - `send_http_request` and `send_http_requests` are now ROE-guarded: targets
