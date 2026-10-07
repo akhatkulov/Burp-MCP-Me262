@@ -141,14 +141,18 @@ object Requests {
     }
 
     private fun cookieJarPairs(api: MontoyaApi, request: HttpRequest): List<Pair<String, String>> {
-        val host = runCatching { request.httpService().host() }.getOrNull() ?: return emptyList()
+        val host = runCatching { request.httpService().host() }.getOrNull()?.lowercase() ?: return emptyList()
         return runCatching {
             api.http().cookieJar().cookies()
-                .filter { c -> host.equals(c.domain(), ignoreCase = true) || host.endsWith("." + c.domain()) }
+                .filter { c ->
+                    // Domain match is case-insensitive; a leading-dot domain (".example.com") matches too.
+                    val d = c.domain().removePrefix(".").lowercase()
+                    host == d || host.endsWith(".$d")
+                }
                 .map { it.name() to it.value() }
         }.getOrDefault(emptyList())
     }
 
     fun cookieHeaderValue(pairs: Map<String, String>): String =
-        pairs.entries.joinToString("; ") { (k, v) -> if (v.isEmpty()) k else "$k=$v" }
+        pairs.entries.joinToString("; ") { (k, v) -> "$k=$v" }
 }

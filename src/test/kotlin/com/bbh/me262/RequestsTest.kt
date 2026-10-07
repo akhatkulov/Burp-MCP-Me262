@@ -47,6 +47,11 @@ class RequestsTest {
         assertEquals("a=1; b=2", Requests.cookieHeaderValue(linkedMapOf("a" to "1", "b" to "2")))
     }
 
+    @Test fun cookieHeaderValueKeepsEqualsForEmptyValue() {
+        // An empty value must still render as "k=", not a bare "k" (which drops the pair shape).
+        assertEquals("a=; b=2", Requests.cookieHeaderValue(linkedMapOf("a" to "", "b" to "2")))
+    }
+
     @Test fun parseHeadersFromStringArray() {
         val arr = buildJsonArray {
             add("Content-Type: application/json")

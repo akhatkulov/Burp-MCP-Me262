@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.3 — 2026-10-07
+### Cookie builder fixes
+- `use_cookie_jar` domain matching is now case-insensitive and also matches a
+  leading-dot cookie domain (`.example.com`), so jar cookies attach reliably
+  regardless of host casing.
+- `cookieHeaderValue` keeps the `=` for an empty-value cookie (renders `k=`
+  instead of a bare `k`), preserving the `name=value` shape.
+- Tests: +1 (54 -> 55).
+
 ## 1.1.2 — 2026-10-07
 ### Unbounded history/site-map queries
 - `get_proxy_history` and `sitemap_query` no longer impose a default row cap

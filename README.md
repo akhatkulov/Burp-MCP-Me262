@@ -43,7 +43,7 @@ a specific crafted request so installed scan-check extensions do the heavy lifti
 | Scope / site map / send-to (Repeater/Intruder/Comparer) | partial | ✅ |
 | **ROE guard** — refuses out-of-scope targets | ❌ | ✅ |
 | Bearer-token auth on the endpoint | ❌ | ✅ |
-| Unit + live-transport tests | ❌ | ✅ 54 |
+| Unit + live-transport tests | ❌ | ✅ 55 |
 
 ## Quickstart
 
@@ -117,7 +117,7 @@ starts a scan or sends traffic. See **[docs/EXTENSION-COMPAT.md](docs/EXTENSION-
 ## Build & test
 
 ```bash
-./gradlew test        # 54 tests: ROE guard, combinatorics, registry, dispatch, transform codecs, request building, history/site-map filters, Intruder markers, live SSE + Streamable HTTP transport
+./gradlew test        # 55 tests: ROE guard, combinatorics, registry, dispatch, transform codecs, request building, history/site-map filters, Intruder markers, live SSE + Streamable HTTP transport
 ./gradlew shadowJar   # the loadable fat jar
 ```
 
